@@ -1,3 +1,50 @@
-:host {
-  display: block;
+.container{
+  background-color: white;
+  width: 100%;
+  height: calc(100% - 110px);
+  overflow: hidden;
+  
+  .title_chats{
+    color: deepskyblue;
+    font-size: 20px;
+    padding: 30px 0 30px 10px;
+  }
+
+  .container_chats{
+    overflow: auto;
+    height: 100%;
+    .person_chat{
+      display: block;
+      height: 80px;
+      border-bottom: 1px solid lightgrey;
+      padding: 20px;
+
+      .container_person_chat{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .person_chat_info{
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          img{
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+          }
+
+          .person_chat_text{
+            .person_chat_name{
+              color: black;
+            }
+            .person_chat_message{
+              color: grey;
+              font-size: 14px;
+            }
+          }
+        }
+      }
+    }
+  }
 }

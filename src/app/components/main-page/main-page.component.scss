@@ -1,3 +1,14 @@
-:host {
-  display: block;
+.container{
+  height: 100vh;
+  display: flex;
+
+  .left-side{
+    height: 100%;
+    width: 30%;
+  }
+
+  .right-side{
+    height: 100%;
+    width: 70%;
+  }
 }

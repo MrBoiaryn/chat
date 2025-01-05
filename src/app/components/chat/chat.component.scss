@@ -1,3 +1,107 @@
-:host {
-  display: block;
+.container{
+  // background-color: #F5F5F5;
+  width: 100%;
+  height: 100%;
+  border-left: 1px solid lightgray;
+  border-top: 1px solid lightgray;
+
+  .container_header{
+    background-color: #F5F5F5;
+    width: 100%;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 0 20px;
+    border-bottom: 1px solid lightgray;
+
+    img{
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+
+    p{
+      font-weight: bold;
+    }
+  }
+
+  .container_chat{
+    height: calc(100% - 120px);
+
+    .chat_message_auto{
+      .message_container{
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 20px 20px 0 20px;
+        img{
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+        }
+        p{
+          display: block;
+          padding: 10px;
+          color: white;
+          background-color: #3A4255;
+          border-radius: 20px;
+          font-size: 14px;
+        }
+      }
+
+      .chat_message_auto_time{
+        color: gray;
+        padding-left: 80px;
+        font-size: 12px;
+      }
+
+    }
+
+    .chat_message_my{
+      display: flex;
+      align-items: end;
+      padding: 20px 20px 0 20px;
+      flex-direction: column
+;
+      .chat_message_my_text{
+        display: block;
+        padding: 10px;
+        color: black;
+        background-color: #DFDFDF;
+        border-radius: 20px;
+        font-size: 14px;
+      }
+
+      .chat_message_my_time{
+        color: gray;
+        font-size: 12px;
+      }
+    }
+  }
+
+  .container_message{
+    width: 100%;
+    height: 60px;
+    background-color: #F5F5F5;
+    padding: 15px;
+    position: relative;
+    border-top: 1px solid lightgray;
+;
+
+    input{
+      width: 100%;
+      height: 30px;
+      border-radius: 10px;
+      border: 1px solid lightgray;
+      padding-left: 10px;
+    }
+
+    mat-icon{
+      position: absolute;
+      right: 25px;
+      top: 18px;
+      color: gray;
+    }
+  }
 }
