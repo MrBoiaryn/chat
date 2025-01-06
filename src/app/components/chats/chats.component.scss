@@ -13,11 +13,24 @@
   .container_chats{
     overflow: auto;
     height: 100%;
+
+
     .person_chat{
       display: block;
       height: 80px;
       border-bottom: 1px solid lightgrey;
       padding: 20px;
+      cursor: pointer;
+
+      &:hover{
+        background-color: #F5F5F5;
+      }
+
+      &.selected {
+        background-color: #e6f7ff;
+        border-left: 4px solid deepskyblue;
+        padding-left: 16px;
+      }
 
       .container_person_chat{
         display: flex;
@@ -43,6 +56,11 @@
               font-size: 14px;
             }
           }
+        }
+
+        .person_chat_time{
+          color: grey;
+          font-size: 14px;
         }
       }
     }

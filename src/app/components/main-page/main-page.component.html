@@ -1,10 +1,18 @@
 <div class="container">
   <section class="left-side">
     <app-header></app-header>
-    <app-chats></app-chats>
+    <app-chats (personSelected)="onPersonSelected($event)"></app-chats>
   </section>
 
   <section class="right-side">
-    <app-chat></app-chat>
+    <ng-container *ngIf="selectedPerson; else noChatSelected">
+      <app-chat [name]="selectedPerson?.name" [imgUrl]="selectedPerson?.imgUrl">
+      </app-chat>
+    </ng-container>
+    <ng-template #noChatSelected>
+      <div class="no-chat-message">
+        <p>Please, select chat</p>
+      </div>
+    </ng-template>
   </section>
 </div>

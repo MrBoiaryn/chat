@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MatIconModule } from '@angular/material/icon';
+import { AndriiBoiyarin } from '../../shared/data/datainfo';
 
 @Component({
   selector: 'app-header',
@@ -9,5 +10,6 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrl: './header.component.scss',
 })
 export class HeaderComponent {
-  myName = 'Andrii Boiaryn';
+  myName = AndriiBoiyarin.name;
+  myImgUrl = AndriiBoiyarin.imgUrl;
 }

@@ -3,49 +3,22 @@
 
   <div class="container_chats">
     <ul>
-      <li class="person_chat">
-        <div class="container_person_chat">
-          <div class="person_chat_info">
-            <img src="../../../assets/images/icon/2.png" alt="avatar">
-            <div class="person_chat_text">
-              <p class="person_chat_name">Alice Freeman</p>
-              <p class="person_chat_message">How was your meeting?</p>
-            </div>
-          </div>
-          <div class="person_chat_time">
-            <p>Time</p>
-          </div>
-        </div>
-      </li>
-      <li class="person_chat">
-        <div class="container_person_chat">
-          <div class="person_chat_info">
-            <img src="../../../assets/images/icon/3.png" alt="avatar">
-            <div class="person_chat_text">
-              <p class="person_chat_name">Josefina Jackson</p>
-              <p class="person_chat_message">Hi! No, I am going for a walk.</p>
-            </div>
-          </div>
-          <div class="person_chat_time">
-            <p>Time</p>
-          </div>
-        </div>
-      </li>
-      <li class="person_chat">
-        <div class="container_person_chat">
-          <div class="person_chat_info">
-            <img src="../../../assets/images/icon/4.png" alt="avatar">
-            <div class="person_chat_text">
-              <p class="person_chat_name">Velazguez</p>
-              <p class="person_chat_message">Hi! I am a little sad, tell me a joke please.</p>
-            </div>
-          </div>
-          <div class="person_chat_time">
-            <p>Time</p>
-          </div>
-        </div>
-      </li>
 
+      <li *ngFor="let person of personsArray" class="person_chat" (click)="selectPerson(person)"
+        [class.selected]="person === selectedPerson">
+        <div class="container_person_chat">
+          <div class="person_chat_info">
+            <img [src]="person.imgUrl" alt="avatar {{person.name}}">
+            <div class="person_chat_text">
+              <p class="person_chat_name">{{person.name}}</p>
+              <p class="person_chat_message">{{person.lastMessage}}</p>
+            </div>
+          </div>
+          <div class="person_chat_time">
+            <p>{{person.time | date:'mediumDate'}}</p>
+          </div>
+        </div>
+      </li>
 
     </ul>
   </div>

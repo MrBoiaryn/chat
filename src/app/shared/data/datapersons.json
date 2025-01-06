@@ -2,6 +2,14 @@
   "Andrii Boiaryn": {
     "name": "Andrii Boiaryn",
     "imgUrl": "../../../assets/images/icon/5.png"
+  },
+
+  "Alice Freeman": {
+    "name": "Alice Freeman",
+    "imgUrl": "../../../assets/images/icon/2.png",
+    "lastMessage": "How was your meeting?"
   }
-  
+
+
+
 }

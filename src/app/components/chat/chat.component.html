@@ -1,27 +1,29 @@
 <div class="container">
 
   <div class="container_header">
-    <img src="../../../assets/images/icon/2.png" alt="avatar">
-    <p>Alice Freeman</p>
+    <img [src]="imgUrl" alt="avatar">
+    <p>{{name}}</p>
   </div>
 
   <div class="container_chat">
 
+    <!-- під класом chat_message_auto знаходяться автоматичні повідомлення, sender: будь який контакт з чату -->
     <div class="chat_message_auto">
       <div class="message_container">
-        <img src="../../../assets/images/icon/2.png" alt="avatar">
-        <p>Hi, how are you?</p>
+        <img [src]="imgUrl" alt="avatar">
+        <p>message</p>
       </div>
       <p class="chat_message_auto_time">time</p>
     </div>
 
+    <!-- під класом chat_message_my знаходяться відповіді від мене, sender: 'AndriiBoiyarin' -->
     <div class="chat_message_my">
-      <p class="chat_message_my_text">Not bad. What about you?</p>
+      <p class="chat_message_my_text">message</p>
       <p class="chat_message_my_time">time</p>
     </div>
 
     <div class="chat_message_my">
-      <p class="chat_message_my_text">Not bad. What about you?</p>
+      <p class="chat_message_my_text">message</p>
       <p class="chat_message_my_time">time</p>
     </div>
 
