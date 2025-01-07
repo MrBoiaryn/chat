@@ -2,11 +2,14 @@
   <section class="left-side">
     <app-header></app-header>
     <app-chats (personSelected)="onPersonSelected($event)"></app-chats>
+    <app-notification class="notification"></app-notification>
   </section>
 
   <section class="right-side">
     <ng-container *ngIf="selectedPerson; else noChatSelected">
-      <app-chat [name]="selectedPerson?.name" [imgUrl]="selectedPerson?.imgUrl">
+      <app-chat [name]="selectedPerson?.name" [surname]="selectedPerson?.surname" [imgUrl]="selectedPerson?.imgUrl"
+        [messages]="selectedPerson?.message" (personDeleted)="onPersonDeleted()"
+        (editingStateChanged)="onEditingStateChanged($event)">
       </app-chat>
     </ng-container>
     <ng-template #noChatSelected>

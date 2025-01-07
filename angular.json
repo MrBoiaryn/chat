@@ -56,6 +56,11 @@
                 "glob": "**/*",
                 "input": "src/assets",
                 "output": "assets"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/app/shared/data",
+                "output": "assets/data"
               }
             ],
             "styles": [

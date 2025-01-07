@@ -1,6 +1,8 @@
 .container{
   height: 100vh;
   display: flex;
+  position: relative;
+  overflow: hidden;
 
   .left-side{
     height: 100%;
@@ -11,7 +13,14 @@
     height: 100%;
     width: 70%;
   }
-}
+
+  .notification{
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    }
+  }
+
 
 .no-chat-message {
   display: flex;

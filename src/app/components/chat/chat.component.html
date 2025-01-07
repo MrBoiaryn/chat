@@ -1,37 +1,59 @@
 <div class="container">
 
   <div class="container_header">
-    <img [src]="imgUrl" alt="avatar">
-    <p>{{name}}</p>
+    <div class="container_header_info">
+      <ng-container *ngIf="!isEditing; else editMode">
+        <p>{{ name }} {{ surname }}</p>
+      </ng-container>
+
+      <ng-template #editMode>
+        <div>
+          <label for="name">Name:</label>
+          <input type="text" id="name" [(ngModel)]="editedName" />
+        </div>
+        <div>
+          <label for="surname">Surname:</label>
+          <input type="text" id="surname" [(ngModel)]="editedSurname" />
+        </div>
+      </ng-template>
+    </div>
+
+    <div class="container_header_btn">
+      <ng-container *ngIf="!isEditing; else saveCancelButtons">
+        <button class="btn" (click)="editPerson()"><mat-icon>edit</mat-icon></button>
+        <button class="btn" (click)="deletePerson()"><mat-icon>delete</mat-icon></button>
+      </ng-container>
+
+      <ng-template #saveCancelButtons>
+        <button class="btn" (click)="saveChanges()"><mat-icon>check</mat-icon></button>
+        <button class="btn" (click)="cancelChanges()"><mat-icon>close</mat-icon></button>
+      </ng-template>
+    </div>
   </div>
 
-  <div class="container_chat">
-
-    <!-- під класом chat_message_auto знаходяться автоматичні повідомлення, sender: будь який контакт з чату -->
-    <div class="chat_message_auto">
-      <div class="message_container">
-        <img [src]="imgUrl" alt="avatar">
-        <p>message</p>
+  <div class="container_chat" #chatContainer>
+    <div *ngFor="let message of messages">
+      <div *ngIf="!isMyMessage(message.sender)" class="chat_message_auto">
+        <div class="message_container">
+          <img [src]="imgUrl" alt="avatar">
+          <p>{{ message.message }}</p>
+        </div>
+        <p class="chat_message_auto_time">{{ message.time | date:'shortTime' }}</p>
       </div>
-      <p class="chat_message_auto_time">time</p>
-    </div>
 
-    <!-- під класом chat_message_my знаходяться відповіді від мене, sender: 'AndriiBoiyarin' -->
-    <div class="chat_message_my">
-      <p class="chat_message_my_text">message</p>
-      <p class="chat_message_my_time">time</p>
+      <div *ngIf="isMyMessage(message.sender)" class="chat_message_my">
+        <p class="chat_message_my_text">{{ message.message }}</p>
+        <p class="chat_message_my_time">{{ message.time | date:'shortTime' }}</p>
+      </div>
     </div>
-
-    <div class="chat_message_my">
-      <p class="chat_message_my_text">message</p>
-      <p class="chat_message_my_time">time</p>
-    </div>
-
   </div>
 
   <div class="container_message">
-    <input type="text" placeholder="Type your message">
-    <mat-icon>send</mat-icon>
+    <input type="text" placeholder="Type your message" [(ngModel)]="newMessageContent" (keydown.enter)="sendMessage()"
+      #messageInput>
+    <button class="btn" (click)="sendMessage()">
+      <mat-icon>send</mat-icon>
+    </button>
   </div>
 
 </div>

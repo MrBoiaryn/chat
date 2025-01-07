@@ -3,23 +3,21 @@
 
   <div class="container_chats">
     <ul>
-
       <li *ngFor="let person of personsArray" class="person_chat" (click)="selectPerson(person)"
         [class.selected]="person === selectedPerson">
         <div class="container_person_chat">
           <div class="person_chat_info">
-            <img [src]="person.imgUrl" alt="avatar {{person.name}}">
+            <img [src]="person.imgUrl" alt="avatar {{ person.name }} {{ person.surname }}">
             <div class="person_chat_text">
-              <p class="person_chat_name">{{person.name}}</p>
-              <p class="person_chat_message">{{person.lastMessage}}</p>
+              <p class="person_chat_name">{{ person.name }} {{ person.surname }}</p>
+              <p class="person_chat_message">{{ person.lastMessage | maxlength}}</p>
             </div>
           </div>
           <div class="person_chat_time">
-            <p>{{person.time | date:'mediumDate'}}</p>
+            <p>{{ person.time | date: 'mediumDate' }}</p>
           </div>
         </div>
       </li>
-
     </ul>
   </div>
 </div>
