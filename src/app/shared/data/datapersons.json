@@ -4,21 +4,21 @@
     "surname": "Freeman",
     "imgUrl": "../../../assets/images/icon/2.png",
     "lastMessage": "How was your meeting?",
-    "time": "1736108866000",
+    "time": "2023-01-05T14:34:26Z",
     "message": [
       {
         "message": "Hi! How are you?",
-        "time": "1736008866000",
+        "time": "2023-01-04T14:34:26Z",
         "sender": "AliceFreeman"
       },
       {
         "message": "How was your meeting?",
-        "time": "1735108866000",
+        "time": "2023-01-03T14:34:26Z",
         "sender": "AliceFreeman"
       },
       {
         "message": "Hi! I am fine, thank you!",
-        "time": "1736004866000",
+        "time": "2023-01-04T13:34:26Z",
         "sender": "AndriiBoiyarin"
       }
     ]
@@ -28,21 +28,21 @@
     "surname": "Jackson",
     "imgUrl": "../../../assets/images/icon/6.png",
     "lastMessage": "Hi! No, I am going for a walk.",
-    "time": "1736007756000",
+    "time": "2023-01-04T14:09:16Z",
     "message": [
       {
         "message": "Hi! How are you?",
-        "time": "1736007756000",
+        "time": "2023-01-04T14:09:16Z",
         "sender": "JosefinaJackson"
       },
       {
         "message": "Hi! No, I am going for a walk.",
-        "time": "1736007756000",
+        "time": "2023-01-04T14:09:16Z",
         "sender": "JosefinaJackson"
       },
       {
         "message": "Hi! I am fine, thank you!",
-        "time": "1736007756000",
+        "time": "2023-01-04T14:09:16Z",
         "sender": "AndriiBoiyarin"
       }
     ]
@@ -52,21 +52,21 @@
     "surname": "Obama",
     "imgUrl": "../../../assets/images/icon/4.png",
     "lastMessage": "Hi! I am a little sad, tell me a joke please.",
-    "time": "1735907756000",
+    "time": "2023-01-03T14:09:16Z",
     "message": [
       {
         "message": "Hi! How are you?",
-        "time": "1735907756000",
+        "time": "2023-01-03T14:09:16Z",
         "sender": "Velazguez"
       },
       {
         "message": "Hi! I am a little sad, tell me a joke please.",
-        "time": "1735907756000",
+        "time": "2023-01-03T14:09:16Z",
         "sender": "Velazguez"
       },
       {
         "message": "Hi! I am fine, thank you!",
-        "time": "1735907756000",
+        "time": "2023-01-03T14:09:16Z",
         "sender": "AndriiBoiyarin"
       }
     ]

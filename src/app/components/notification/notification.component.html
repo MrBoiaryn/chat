@@ -1,7 +1,7 @@
 <div class="container">
-  <button class="btn" (click)="closeNotification()"><mat-icon>close</mat-icon></button>
-  <!-- <p>{{name}} {{surname}}</p> -->
-  <!-- <p>{{lastMessage}}</p> -->
-  <p class="name">Name Surname</p>
-  <p class="message">{{message | maxlengthnotification }}</p>
+  <button class="btn" (click)="closeNotification()">
+    <mat-icon>close</mat-icon>
+  </button>
+  <p class="name">{{ name }} {{ surname }}</p>
+  <p class="message">{{ message | maxlengthnotification}}</p>
 </div>

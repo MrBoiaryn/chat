@@ -1,0 +1,46 @@
+.search-results {
+  max-height: 100vh;
+  overflow-y: auto;
+  background: #ffffff; /* Фіксуємо фон */
+  border: 1px solid lightgray;
+  border-radius: 5px;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Додаємо тінь */
+  z-index: 10; /* Піднімаємо контейнер над іншими елементами */
+  position: relative; /* Фіксуємо позицію */
+
+  .search-result {
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eaeaea;
+    padding-bottom: 5px;
+
+    .message-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: gray;
+    }
+
+    .chat-name {
+      font-weight: bold;
+    }
+
+    .message-text {
+      font-size: 14px;
+    }
+
+   
+  }
+}
+
+.no-results {
+  text-align: center;
+  color: gray;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+.highlight {
+  background-color: yellow; /* Жовтий фон для виділення */
+  font-weight: bold;        /* Напівжирний текст */
+}

@@ -1,0 +1,13 @@
+<div *ngIf="filteredMessages.length > 0" class="search-results">
+  <div *ngFor="let result of filteredMessages" class="search-result">
+    <div class="message-info">
+      <p class="chat-name">{{ result.name }} {{ result.surname }}</p>
+      <p class="message-time">{{ result.time | date: 'short' }}</p>
+    </div>
+    <p class="message-text" [innerHTML]="highlightMatch(result.message)"></p>
+  </div>
+</div>
+
+<div *ngIf="filteredMessages.length === 0" class="no-results">
+  <p>No messages found</p>
+</div>

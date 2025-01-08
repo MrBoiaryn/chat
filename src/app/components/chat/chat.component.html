@@ -57,3 +57,9 @@
   </div>
 
 </div>
+
+<div class="notifications-container">
+  <app-notification *ngFor="let notification of notifications" [name]="notification.name"
+    [surname]="notification.surname" [message]="notification.message"
+    (close)="closeNotification(notification)"></app-notification>
+</div>

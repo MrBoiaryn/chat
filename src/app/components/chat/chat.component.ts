@@ -14,10 +14,17 @@ import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { HttpService } from '../../shared/services/http.service';
 import { FormsModule } from '@angular/forms';
+import { NotificationComponent } from '../notification/notification.component';
 
 @Component({
   selector: 'app-chat',
-  imports: [MatIconModule, CommonModule, MatButtonModule, FormsModule],
+  imports: [
+    MatIconModule,
+    CommonModule,
+    MatButtonModule,
+    FormsModule,
+    NotificationComponent,
+  ],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss',
 })
@@ -37,6 +44,9 @@ export class ChatComponent implements AfterViewInit, OnChanges {
   editedSurname: string = '';
   newMessageContent: string = ''; // Введений текст повідомлення
   private inputStates: Record<string, string> = {}; // Зберігання стану інпутів за ім’ям контакту
+  notifications: { name: string; surname: string; message: string }[] = [];
+  // private activeChatName: string | null = null;
+  private activeChatContact: { name: string; surname: string } | null = null;
 
   constructor(private httpService: HttpService) {}
 
@@ -110,12 +120,13 @@ export class ChatComponent implements AfterViewInit, OnChanges {
     };
 
     this.httpService.addMessageToPerson(this.name!, newMessage); // Оновлюємо повідомлення через сервіс
-    this.updateMessages();
+    this.updateMessages(); // Оновлюємо список повідомлень
     this.newMessageContent = ''; // Очищаємо поле вводу
-    this.focusMessageInput();
+    this.focusMessageInput(); // Повертаємо фокус на інпут
+    this.activeChatContact = { name: this.name!, surname: this.surname || '' }; // Зберігаємо ім’я активного чату
 
     setTimeout(() => {
-      this.getBotResponse();
+      this.getBotResponse(this.activeChatContact); // Передаємо ім’я активного чату
     }, 3000);
   }
 
@@ -136,16 +147,23 @@ export class ChatComponent implements AfterViewInit, OnChanges {
     }
   }
 
-  private getBotResponse() {
+  private getBotResponse(contact: { name: string; surname: string } | null) {
+    if (!contact) return; // Якщо контакт не передано, виходимо
+
     this.httpService.getRandomQuote().subscribe((quote) => {
       const botMessage = {
         message: quote,
         time: new Date().toISOString(),
-        sender: this.name, // Ім'я співрозмовника
+        sender: contact.name, // Ім'я співрозмовника
       };
 
-      this.httpService.addMessageToPerson(this.name!, botMessage); // Додаємо відповідь співрозмовника
-      this.updateMessages(); // Оновлюємо локальний список
+      this.httpService.addMessageToPerson(contact.name, botMessage); // Додаємо відповідь у правильний чат
+      if (this.name === contact.name) {
+        this.updateMessages(); // Оновлюємо локальний список, якщо чат відкрито
+      }
+
+      // Відображаємо нотифікацію
+      this.showNotification(contact.name, contact.surname, quote);
     });
   }
 
@@ -157,5 +175,21 @@ export class ChatComponent implements AfterViewInit, OnChanges {
         0
       );
     }
+  }
+
+  private showNotification(name: string, surname: string, message: string) {
+    console.log('Notification created:', { name, surname, message });
+    const notification = { name, surname, message };
+    this.notifications.push(notification);
+
+    // Автоматичне закриття через 5 секунд
+    setTimeout(() => {
+      this.notifications = this.notifications.filter((n) => n !== notification);
+      console.log('Notification removed:', notification);
+    }, 15000);
+  }
+
+  closeNotification(notification: any) {
+    this.notifications = this.notifications.filter((n) => n !== notification);
   }
 }

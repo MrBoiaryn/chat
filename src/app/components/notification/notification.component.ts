@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MaxlengthPipeNotification } from '../../shared/pipes/maxlengthnotification.pipe';
 
@@ -10,12 +10,12 @@ import { MaxlengthPipeNotification } from '../../shared/pipes/maxlengthnotificat
   styleUrl: './notification.component.scss',
 })
 export class NotificationComponent {
-  name: string | undefined;
-  surname: string | undefined;
-  lastMessage: string | undefined;
+  @Input() name: string = ''; // Ім'я відправника
+  @Input() surname: string = ''; // Прізвище відправника
+  @Input() message: string = ''; // Повідомлення
+  @Output() close = new EventEmitter<void>(); // Подія для закриття нотифікації
 
-  message: string =
-    'Lorem ipsum dolor sit amet consectetur adipisicing elit. Impedit aliquam voluptates ea laboriosam quae perferendis soluta fuga. Necessitatibus maxime labore, reprehenderit nam quos, inventore quod dignissimos magnam ex possimus cum.';
-
-  closeNotification() {}
+  closeNotification() {
+    this.close.emit(); // Відправляємо подію закриття
+  }
 }
