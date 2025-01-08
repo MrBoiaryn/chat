@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, map, Observable } from 'rxjs';
+import { BehaviorSubject, catchError, map, Observable, of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -75,12 +75,31 @@ export class HttpService {
     return this.personsSubject.value;
   }
 
+  // getRandomQuote(): Observable<string> {
+  //   const url = 'http://api.quotable.io/random';
+  //   return this.http
+  //     .get<any>(url)
+  //     .pipe(
+  //       map((response) => response.content || 'I am here to chat with you!')
+  //     );
+  // }
   getRandomQuote(): Observable<string> {
-    const url = 'http://api.quotable.io/random';
-    return this.http
-      .get<any>(url)
-      .pipe(
-        map((response) => response.content || 'I am here to chat with you!')
-      );
+    const url = 'https://programming-quotesapi.vercel.app/api/random';
+    return this.http.get<any>(url).pipe(
+      map((response) => {
+        if (response && response.quote) {
+          return response.quote; // Extract quote from the new property
+        } else {
+          console.error('Unexpected response structure from API:', response);
+          return 'An unknown error occurred while retrieving the quote.';
+        }
+      }),
+      catchError((error) => {
+        console.error('There was an error getting the quote:', error);
+        return of(
+          'An error occurred while receiving the quote. Please try again later.'
+        );
+      })
+    );
   }
 }

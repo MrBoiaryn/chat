@@ -4,7 +4,7 @@ import { Pipe, type PipeTransform } from '@angular/core';
   name: 'maxlengthnotification',
 })
 export class MaxlengthPipeNotification implements PipeTransform {
-  transform(value: string, limit = 150): string {
+  transform(value: string, limit = 140): string {
     return value.length > limit ? `${value.substring(0, limit)}...` : value;
   }
 }
