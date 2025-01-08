@@ -45,7 +45,6 @@ export class ChatComponent implements AfterViewInit, OnChanges {
   newMessageContent: string = ''; // Введений текст повідомлення
   private inputStates: Record<string, string> = {}; // Зберігання стану інпутів за ім’ям контакту
   notifications: { name: string; surname: string; message: string }[] = [];
-  // private activeChatName: string | null = null;
   private activeChatContact: { name: string; surname: string } | null = null;
 
   constructor(private httpService: HttpService) {}
@@ -186,7 +185,7 @@ export class ChatComponent implements AfterViewInit, OnChanges {
     setTimeout(() => {
       this.notifications = this.notifications.filter((n) => n !== notification);
       console.log('Notification removed:', notification);
-    }, 15000);
+    }, 5000);
   }
 
   closeNotification(notification: any) {
