@@ -1,14 +1,16 @@
 <div class="container">
   <section class="left-side">
-    <app-header></app-header>
-    <app-chats (personSelected)="onPersonSelected($event)"></app-chats>
+    <app-header [refreshContacts]="refreshContacts.bind(this)"></app-header>
+    <app-chats (personSelected)="onPersonSelected($event)" [contacts]="contacts" [isEditing]="isEditing"></app-chats>
   </section>
 
   <section class="right-side">
     <ng-container *ngIf="selectedPerson; else noChatSelected">
-      <app-chat [name]="selectedPerson?.name" [surname]="selectedPerson?.surname" [imgUrl]="selectedPerson?.imgUrl"
-        [messages]="selectedPerson?.message" (personDeleted)="onPersonDeleted()"
-        (editingStateChanged)="onEditingStateChanged($event)">
+      <app-chat [contactKey]="selectedPerson.key || ''" [name]="selectedPerson.name || ''"
+        [surname]="selectedPerson.surname || ''" [imgUrl]="selectedPerson.imgUrl || ''"
+        [messages]="selectedPerson.messages || []" (contactDeleted)="onPersonDeleted($event)"
+        (editingStateChanged)="onEditingStateChanged($event)" (contactUpdated)="onContactUpdated($event)"
+        (lastMessageUpdated)="onLastMessageUpdated($event)">
       </app-chat>
     </ng-container>
     <ng-template #noChatSelected>

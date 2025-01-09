@@ -10,12 +10,13 @@ import { MaxlengthPipeNotification } from '../../shared/pipes/maxlengthnotificat
   styleUrl: './notification.component.scss',
 })
 export class NotificationComponent {
-  @Input() name: string = ''; // Ім'я відправника
-  @Input() surname: string = ''; // Прізвище відправника
-  @Input() message: string = ''; // Повідомлення
+  @Input() name: string = '';
+  @Input() surname: string = '';
+  @Input() message: string = '';
   @Output() close = new EventEmitter<void>(); // Подія для закриття нотифікації
 
-  closeNotification() {
+  closeNotification(): void {
+    console.log('Notification closed');
     this.close.emit(); // Відправляємо подію закриття
   }
 }

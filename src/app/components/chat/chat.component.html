@@ -32,26 +32,35 @@
   </div>
 
   <div class="container_chat" #chatContainer>
-    <div *ngFor="let message of messages">
-      <div *ngIf="!isMyMessage(message.sender)" class="chat_message_auto">
-        <div class="message_container">
-          <img [src]="imgUrl" alt="avatar">
-          <p>{{ message.message }}</p>
+    <div *ngIf="messages && messages.length > 0; else noMessages">
+      <div *ngFor="let message of messages">
+        <div *ngIf="!isMyMessage(message.sender)" class="chat_message_auto">
+          <div class="message_container">
+            <img [src]="imgUrl" alt="avatar">
+            <p>{{ message.message }}</p>
+          </div>
+          <p class="chat_message_auto_time">{{ message.time | date:'shortTime' }}</p>
         </div>
-        <p class="chat_message_auto_time">{{ message.time | date:'shortTime' }}</p>
-      </div>
 
-      <div *ngIf="isMyMessage(message.sender)" class="chat_message_my">
-        <p class="chat_message_my_text">{{ message.message }}</p>
-        <p class="chat_message_my_time">{{ message.time | date:'shortTime' }}</p>
+        <div *ngIf="isMyMessage(message.sender)" class="chat_message_my">
+          <p class="chat_message_my_text">{{ message.message }}</p>
+          <p class="chat_message_my_time">{{ message.time | date:'shortTime' }}</p>
+        </div>
       </div>
     </div>
+
+    <ng-template #noMessages>
+      <div class="no-messages">
+        <p>No messages yet. Start the conversation!</p>
+      </div>
+    </ng-template>
   </div>
+
 
   <div class="container_message">
     <input type="text" placeholder="Type your message" [(ngModel)]="newMessageContent" (keydown.enter)="sendMessage()"
       #messageInput>
-    <button class="btn" (click)="sendMessage()">
+    <button class="btn" (click)="sendMessage()" [disabled]="!newMessageContent.trim()">
       <mat-icon>send</mat-icon>
     </button>
   </div>

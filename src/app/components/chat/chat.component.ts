@@ -5,6 +5,7 @@ import {
   EventEmitter,
   Input,
   OnChanges,
+  OnInit,
   Output,
   SimpleChanges,
   ViewChild,
@@ -15,6 +16,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { HttpService } from '../../shared/services/http.service';
 import { FormsModule } from '@angular/forms';
 import { NotificationComponent } from '../notification/notification.component';
+import { MessageInterface } from '../../shared/types/message.interface';
+import { ContactInterface } from '../../shared/types/contact.interface';
 
 @Component({
   selector: 'app-chat',
@@ -28,26 +31,39 @@ import { NotificationComponent } from '../notification/notification.component';
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss',
 })
-export class ChatComponent implements AfterViewInit, OnChanges {
+export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
+  @Input() contactKey: string | undefined;
   @Input() name: string | undefined;
   @Input() surname: string | undefined;
   @Input() imgUrl: string | undefined;
-  @Input() messages: Array<any> = [];
-  @Output() personDeleted = new EventEmitter<void>();
-  @Output() editingStateChanged = new EventEmitter<boolean>(); // Стан редагування
+  @Input() messages: MessageInterface[] = [];
+
+  @Output() contactDeleted = new EventEmitter<string>();
+  @Output() editingStateChanged = new EventEmitter<boolean>();
+  @Output() contactUpdated = new EventEmitter<ContactInterface>();
+  @Output() lastMessageUpdated = new EventEmitter<{
+    contactKey: string;
+    lastMessage: string;
+    time: string;
+  }>();
+  @Output() notificationEvent = new EventEmitter<string>();
+  @Output() newNotification = new EventEmitter<{ message: string }>();
 
   @ViewChild('chatContainer') chatContainer: ElementRef | undefined;
   @ViewChild('messageInput') messageInput!: ElementRef<HTMLInputElement>;
 
-  isEditing = false; // Чи перебуває компонент у режимі редагування
+  isEditing: boolean = false;
   editedName: string = '';
   editedSurname: string = '';
-  newMessageContent: string = ''; // Введений текст повідомлення
-  private inputStates: Record<string, string> = {}; // Зберігання стану інпутів за ім’ям контакту
   notifications: { name: string; surname: string; message: string }[] = [];
-  private activeChatContact: { name: string; surname: string } | null = null;
+
+  newMessageContent: string = '';
 
   constructor(private httpService: HttpService) {}
+
+  ngOnInit(): void {
+    this.loadMessages();
+  }
 
   ngAfterViewInit(): void {
     this.scrollToBottom();
@@ -58,137 +74,179 @@ export class ChatComponent implements AfterViewInit, OnChanges {
     if (changes['messages']) {
       this.scrollToBottom();
     }
-
-    if (changes['name'] && changes['name'].currentValue) {
-      // Зберігаємо попередній стан
-      if (changes['name'].previousValue) {
-        this.inputStates[changes['name'].previousValue] =
-          this.newMessageContent;
-      }
-
-      // Встановлюємо стан для нового контакту
-      this.newMessageContent =
-        this.inputStates[changes['name'].currentValue] || '';
-      this.focusMessageInput(); // Фокус на інпуті
+    if (changes['contactKey'] && this.contactKey) {
+      this.loadMessages();
     }
   }
 
-  editPerson() {
+  sendMessage(): void {
+    if (!this.newMessageContent.trim() || !this.contactKey) return;
+
+    const newMessage: MessageInterface = {
+      message: this.newMessageContent.trim(),
+      time: new Date().toISOString(),
+      sender: 'User',
+    };
+
+    this.messages.push(newMessage);
+    this.scrollToBottom();
+    this.newMessageContent = '';
+
+    this.httpService
+      .addMessageToContact(this.contactKey, newMessage)
+      .subscribe(() => {
+        this.updateLastMessageOnServer(newMessage);
+        this.loadMessages();
+        setTimeout(() => this.getBotResponse(), 3000);
+      });
+  }
+
+  editPerson(): void {
     this.isEditing = true;
     this.editedName = this.name || '';
     this.editedSurname = this.surname || '';
-    this.editingStateChanged.emit(true); // Повідомляємо про початок редагування
+    this.editingStateChanged.emit(true);
   }
 
-  saveChanges() {
-    const updatedPerson = {
-      originalName: this.name, // Для ідентифікації контакту
+  deletePerson(): void {
+    if (!this.contactKey) return;
+
+    this.httpService.deleteContact(this.contactKey).subscribe({
+      next: () => {
+        this.contactDeleted.emit(this.contactKey); // Передаємо ключ контакту
+      },
+      error: (err) => {
+        console.error('Error deleting contact:', err);
+      },
+    });
+  }
+
+  selectPerson(contact: ContactInterface): void {
+    if (this.isEditing) {
+      alert('You cannot switch chats while editing.');
+      return;
+    }
+    this.contactUpdated.emit(contact);
+  }
+
+  saveChanges(): void {
+    if (!this.contactKey) return;
+
+    const updatedContact: ContactInterface = {
+      key: this.contactKey,
       name: this.editedName,
       surname: this.editedSurname,
+      imgUrl: this.imgUrl || '',
+      lastMessage:
+        this.messages.length > 0
+          ? this.messages[this.messages.length - 1].message
+          : '',
+      time: new Date().toISOString(),
+      messages: this.messages,
     };
-    this.httpService.updatePerson(updatedPerson);
-    this.isEditing = false;
-    this.name = this.editedName;
-    this.surname = this.editedSurname;
-    this.editingStateChanged.emit(false); // Повідомляємо про завершення редагуванн
+
+    this.httpService.updateContact(this.contactKey, updatedContact).subscribe({
+      next: () => {
+        this.name = this.editedName;
+        this.surname = this.editedSurname;
+        this.isEditing = false;
+        this.contactUpdated.emit(updatedContact);
+        this.editingStateChanged.emit(false);
+      },
+      error: (err) => {
+        console.error('Error saving changes:', err);
+      },
+    });
   }
 
-  cancelChanges() {
+  cancelChanges(): void {
     this.isEditing = false;
-    this.editingStateChanged.emit(false); // Повідомляємо про завершення редагування
-  }
-
-  deletePerson() {
-    this.httpService.deletePerson(this.name || '');
-    this.personDeleted.emit();
+    this.editingStateChanged.emit(false); // Передаємо стан редагування
   }
 
   isMyMessage(sender: string): boolean {
-    return sender === 'AndriiBoiyarin';
-  }
-
-  sendMessage() {
-    if (!this.newMessageContent || !this.name) {
-      return; // Не дозволяємо відправляти порожні повідомлення
-    }
-
-    const newMessage = {
-      message: this.newMessageContent,
-      time: new Date().toISOString(),
-      sender: 'AndriiBoiyarin', // Ідентифікатор вашого користувача
-    };
-
-    this.httpService.addMessageToPerson(this.name!, newMessage); // Оновлюємо повідомлення через сервіс
-    this.updateMessages(); // Оновлюємо список повідомлень
-    this.newMessageContent = ''; // Очищаємо поле вводу
-    this.focusMessageInput(); // Повертаємо фокус на інпут
-    this.activeChatContact = { name: this.name!, surname: this.surname || '' }; // Зберігаємо ім’я активного чату
-
-    setTimeout(() => {
-      this.getBotResponse(this.activeChatContact); // Передаємо ім’я активного чату
-    }, 3000);
-  }
-
-  private focusMessageInput() {
-    setTimeout(() => {
-      this.messageInput.nativeElement.focus(); // Фокус на інпуті
-    }, 0);
-  }
-
-  private updateMessages() {
-    const currentPersons = this.httpService.getCurrentPersons(); // Отримуємо актуальний список контактів
-    const currentPerson = currentPersons.find(
-      (person) => person.name === this.name
-    );
-    if (currentPerson) {
-      this.messages = currentPerson.message; // Оновлюємо список повідомлень
-      this.scrollToBottom();
-    }
-  }
-
-  private getBotResponse(contact: { name: string; surname: string } | null) {
-    if (!contact) return; // Якщо контакт не передано, виходимо
-
-    this.httpService.getRandomQuote().subscribe((quote) => {
-      const botMessage = {
-        message: quote,
-        time: new Date().toISOString(),
-        sender: contact.name, // Ім'я співрозмовника
-      };
-
-      this.httpService.addMessageToPerson(contact.name, botMessage); // Додаємо відповідь у правильний чат
-      if (this.name === contact.name) {
-        this.updateMessages(); // Оновлюємо локальний список, якщо чат відкрито
-      }
-
-      // Відображаємо нотифікацію
-      this.showNotification(contact.name, contact.surname, quote);
-    });
+    return sender === 'User';
   }
 
   private scrollToBottom(): void {
     if (this.chatContainer) {
       const nativeElement = this.chatContainer.nativeElement;
-      setTimeout(
-        () => (nativeElement.scrollTop = nativeElement.scrollHeight),
-        0
-      );
+      setTimeout(() => {
+        nativeElement.scrollTop = nativeElement.scrollHeight;
+      }, 100);
     }
   }
 
-  private showNotification(name: string, surname: string, message: string) {
-    console.log('Notification created:', { name, surname, message });
-    const notification = { name, surname, message };
-    this.notifications.push(notification);
-
-    // Автоматичне закриття через 5 секунд
+  private focusMessageInput(): void {
     setTimeout(() => {
-      this.notifications = this.notifications.filter((n) => n !== notification);
-      console.log('Notification removed:', notification);
-    }, 5000);
+      this.messageInput.nativeElement.focus();
+    }, 0);
   }
 
-  closeNotification(notification: any) {
+  private getBotResponse(): void {
+    if (!this.contactKey) return;
+
+    this.httpService.getBotResponse(this.contactKey).subscribe((botMessage) => {
+      this.messages.push(botMessage);
+      this.scrollToBottom();
+      this.updateLastMessageOnServer(botMessage);
+      // this.newNotification.emit({ message: botMessage.message });
+
+      this.addNotification(
+        `${this.name || 'Bot'} ${this.surname || ''}`.trim(),
+        botMessage.message
+      );
+    });
+  }
+
+  private updateLastMessageOnServer(lastMessage: MessageInterface): void {
+    const updatedContact: ContactInterface = {
+      key: this.contactKey!,
+      name: this.name || '',
+      surname: this.surname || '',
+      imgUrl: this.imgUrl || '',
+      lastMessage: lastMessage.message,
+      time: lastMessage.time,
+      messages: this.messages,
+    };
+
+    this.httpService.updateContact(this.contactKey!, updatedContact).subscribe({
+      next: () => {
+        this.lastMessageUpdated.emit({
+          contactKey: this.contactKey!,
+          lastMessage: lastMessage.message,
+          time: lastMessage.time,
+        });
+      },
+      error: (err) => console.error('Error updating last message:', err),
+    });
+  }
+
+  private loadMessages(): void {
+    this.httpService.getMessages(this.contactKey!).subscribe((messages) => {
+      this.messages = messages || [];
+      this.scrollToBottom();
+
+      if (this.messages.length > 0) {
+        const lastMessage = this.messages[this.messages.length - 1];
+        this.lastMessageUpdated.emit({
+          contactKey: this.contactKey!,
+          lastMessage: lastMessage.message,
+          time: lastMessage.time,
+        });
+      }
+    });
+  }
+
+  private addNotification(name: string, message: string): void {
+    const notification = { name, surname: '', message };
+    this.notifications.push(notification);
+
+    // Автоматичне закриття через 10 секунд
+    setTimeout(() => this.closeNotification(notification), 10000);
+  }
+
+  closeNotification(notification: any): void {
     this.notifications = this.notifications.filter((n) => n !== notification);
   }
 }

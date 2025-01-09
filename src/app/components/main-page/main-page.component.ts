@@ -4,6 +4,7 @@ import { ChatsComponent } from '../chats/chats.component';
 import { ChatComponent } from '../chat/chat.component';
 import { CommonModule } from '@angular/common';
 import { HttpService } from '../../shared/services/http.service';
+import { ContactInterface } from '../../shared/types/contact.interface';
 
 @Component({
   selector: 'app-main-page',
@@ -12,34 +13,53 @@ import { HttpService } from '../../shared/services/http.service';
   styleUrl: './main-page.component.scss',
 })
 export class MainPageComponent implements OnInit {
-  selectedPerson: any = null;
+  selectedPerson: ContactInterface | null = null;
   isEditing = false; // Стан редагування
-  selectedChat: any = null;
-  allMessages: Array<{
-    chatName: string;
-    message: string;
-    time: string;
-    surname: string;
-  }> = [];
+  contacts: ContactInterface[] = [];
 
   constructor(private httpService: HttpService) {}
 
   ngOnInit(): void {
     this.loadAllMessages();
+    this.loadContacts();
   }
 
-  private loadAllMessages() {
-    this.httpService.getPersonsData().subscribe((allPersons) => {
-      this.allMessages = allPersons.flatMap((person: any) =>
-        person.message.map((msg: any) => ({
-          chatName: person.name,
-          surname: person.surname || '',
-          message: msg.message,
-          time: msg.time,
-        }))
-      );
+  loadContacts(): void {
+    this.httpService.getContacts().subscribe({
+      next: (contacts) => {
+        this.contacts = contacts;
+      },
+      error: (err) => {
+        console.error('Error loading contacts:', err);
+      },
     });
   }
+
+  onPersonDeleted(contactKey: string): void {
+    this.selectedPerson = null; // Скидаємо вибраний контакт
+
+    this.contacts = this.contacts.filter(
+      (contact) => contact.key !== contactKey
+    );
+  }
+
+  refreshContacts(): void {
+    this.loadContacts(); // Метод для оновлення контактів
+  }
+
+  loadAllMessages(): void {
+    this.httpService.getContacts().subscribe((allPersons) => {
+      console.log('All messages loaded:', allPersons);
+    });
+  }
+
+  // onPersonSelected(contact: ContactInterface): void {
+  //   if (this.isEditing) {
+  //     alert('You cannot switch chats while editing.');
+  //     return;
+  //   }
+  //   this.selectedPerson = contact ?? null;
+  // }
 
   onPersonSelected(person: any) {
     if (this.isEditing) {
@@ -50,27 +70,29 @@ export class MainPageComponent implements OnInit {
   }
 
   onEditingStateChanged(isEditing: boolean) {
-    this.isEditing = isEditing; // Оновлюємо стан редагування
+    this.isEditing = isEditing;
   }
 
-  onPersonDeleted() {
-    this.selectedPerson = null; // Скидаємо вибір після видалення
-    this.isEditing = false; // Скидаємо стан редагування після видалення
-  }
-
-  openChat(chat: {
-    chatName: string;
-    surname: string;
-    message: string;
-    time: string;
-  }) {
-    console.log('Chat to open:', chat.chatName); // Виводимо ім'я чату для діагностики
-
-    // Знаходимо вибраний чат у списку
-    this.selectedChat = this.allMessages.find(
-      (item) => item.chatName === chat.chatName
+  onContactUpdated(updatedContact: ContactInterface): void {
+    const index = this.contacts.findIndex(
+      (contact) => contact.key === updatedContact.key
     );
+    if (index !== -1) {
+      this.contacts[index] = updatedContact;
+    }
+  }
 
-    console.log('Selected chat details:', this.selectedChat); // Виводимо деталі обраного чату
+  onLastMessageUpdated(data: {
+    contactKey: string;
+    lastMessage: string;
+    time: string;
+  }): void {
+    const contactIndex = this.contacts.findIndex(
+      (contact) => contact.key === data.contactKey
+    );
+    if (contactIndex !== -1) {
+      this.contacts[contactIndex].lastMessage = data.lastMessage;
+      this.contacts[contactIndex].time = data.time;
+    }
   }
 }

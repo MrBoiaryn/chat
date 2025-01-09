@@ -1,13 +1,14 @@
-import { Component, EventEmitter, inject, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MatIconModule } from '@angular/material/icon';
 import { HttpService } from '../../shared/services/http.service';
-import { DialogModule, Dialog } from '@angular/cdk/dialog';
+import { DialogModule } from '@angular/cdk/dialog';
 import { NewContactDialogComponent } from '../newContactDialog/newContactDialog.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
 import { SearchComponent } from '../search/search.component';
 import { CommonModule } from '@angular/common';
+import { ChatsComponent } from '../chats/chats.component';
 
 @Component({
   selector: 'app-header',
@@ -35,31 +36,32 @@ export class HeaderComponent {
     time: string;
   }> = []; // Всі повідомлення
 
-  readonly dialog = inject(MatDialog);
+  @Input() refreshContacts!: () => void;
 
   @Output() chatSelected = new EventEmitter<string>(); // Подія для передачі вибору чату
 
-  constructor(private httpService: HttpService) {}
+  constructor(private httpService: HttpService, private dialog: MatDialog) {}
 
   ngOnInit(): void {
-    this.httpService.getMyData().subscribe((data) => {
-      this.myName = data.name;
-      this.mySurname = data.surname;
-      this.myImgUrl = data.imgUrl;
-    });
     this.loadMyData();
     this.loadAllMessages();
   }
 
-  openDialog() {
-    const dialogRef = this.dialog.open(NewContactDialogComponent);
+  openDialog(): void {
+    const dialogRef = this.dialog.open(NewContactDialogComponent, {
+      data: {
+        refreshContacts: this.refreshContacts,
+      },
+    });
+
     dialogRef.afterClosed().subscribe((result) => {
-      console.log(`Dialog result: ${result}`);
+      if (result) {
+        console.log(`Dialog result: ${result}`);
+      }
     });
   }
 
   selectChat(chatName: string) {
-    console.log('Selected chat in HeaderComponent:', chatName); // Діагностика
     this.chatSelected.emit(chatName); // Емітуємо подію у батьківський компонент
   }
 
@@ -72,15 +74,17 @@ export class HeaderComponent {
   }
 
   private loadAllMessages() {
-    this.httpService.getPersonsData().subscribe((allPersons) => {
-      this.allMessages = allPersons.flatMap((person: any) =>
-        person.message.map((msg: any) => ({
+    this.httpService.getContacts().subscribe((allPersons) => {
+      this.allMessages = allPersons.flatMap((person: any) => {
+        // Перевіряємо, чи є messages масивом
+        const messages = Array.isArray(person.messages) ? person.messages : [];
+        return messages.map((msg: any) => ({
           name: person.name,
           surname: person.surname,
           message: msg.message,
           time: msg.time,
-        }))
-      );
+        }));
+      });
     });
   }
 }

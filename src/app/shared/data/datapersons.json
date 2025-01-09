@@ -47,7 +47,7 @@
       }
     ]
   },
-  "Velazguez": {
+  "ValeriaObama": {
     "name": "Valeria",
     "surname": "Obama",
     "imgUrl": "../../../assets/images/icon/4.png",
@@ -57,12 +57,12 @@
       {
         "message": "Hi! How are you?",
         "time": "2023-01-03T14:09:16Z",
-        "sender": "Velazguez"
+        "sender": "ValeriaObama"
       },
       {
         "message": "Hi! I am a little sad, tell me a joke please.",
         "time": "2023-01-03T14:09:16Z",
-        "sender": "Velazguez"
+        "sender": "ValeriaObama"
       },
       {
         "message": "Hi! I am fine, thank you!",

@@ -1,105 +1,158 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, catchError, map, Observable, of } from 'rxjs';
+import {
+  BehaviorSubject,
+  catchError,
+  concat,
+  delay,
+  map,
+  Observable,
+  of,
+  switchMap,
+  tap,
+} from 'rxjs';
+import { personsData } from '../data/datainfo';
+import { ContactInterface } from '../types/contact.interface';
+import { RequestContactInterface } from '../types/request-contact.interface';
+import { ResponseContactInterface } from '../types/response-contact.interface';
+import { MessageInterface } from '../types/message.interface';
+// import myData from '../data/myData.json';
+
+const BASE_URL =
+  'https://chat-boiaryn-default-rtdb.europe-west1.firebasedatabase.app/';
+
+const QUOTE_API_URL = 'https://programming-quotesapi.vercel.app/api/random';
+
+// const myUrl = 'assets/data/myData.json';
 
 @Injectable({
   providedIn: 'root',
 })
 export class HttpService {
-  private dataUrl = 'assets/data/datapersons.json';
   private myUrl = 'assets/data/mydata.json';
-  private personsSubject = new BehaviorSubject<any[]>([]);
 
-  constructor(private http: HttpClient) {
-    this.http
-      .get<any>(this.dataUrl)
-      .pipe(map((data) => Object.values(data)))
-      .subscribe((persons) => {
-        this.personsSubject.next(persons);
-      });
+  constructor(private http: HttpClient) {}
+
+  // Get all contacts
+  getContacts(): Observable<ContactInterface[]> {
+    return this.http
+      .get<{ [key: string]: ContactInterface }>(`${BASE_URL}contacts.json`)
+      .pipe(
+        map((response) => {
+          const contactsArray: ContactInterface[] = [];
+          for (const key in response) {
+            if (response.hasOwnProperty(key)) {
+              contactsArray.push({ key, ...response[key] });
+            }
+          }
+          return contactsArray;
+        }),
+        catchError((err) => {
+          console.error('Error fetching contacts:', err);
+          return of([]);
+        })
+      );
+  }
+
+  // Create a new contact
+  createContact(contact: ContactInterface): Observable<ContactInterface> {
+    return this.http
+      .post<{ name: string }>(`${BASE_URL}contacts.json`, contact)
+      .pipe(
+        map((response) => {
+          return { ...contact, key: response.name };
+        }),
+        catchError((err) => {
+          console.error('Error creating contact:', err);
+          return of(contact);
+        })
+      );
+  }
+
+  // Update a contact's information
+  updateContact(key: string, contact: ContactInterface): Observable<void> {
+    return this.http.put<void>(`${BASE_URL}contacts/${key}.json`, contact).pipe(
+      catchError((err) => {
+        console.error('Error updating contact:', err);
+        return of();
+      })
+    );
+  }
+
+  // Delete a contact
+  // Delete a contact
+  deleteContact(key: string): Observable<void> {
+    return this.http.delete<void>(`${BASE_URL}contacts/${key}.json`).pipe(
+      tap(() => console.log(`Contact ${key} deleted`)),
+      catchError((err) => {
+        console.error('Error deleting contact:', err);
+        return of();
+      })
+    );
+  }
+
+  // Add a message to a specific contact
+  addMessageToContact(
+    contactKey: string,
+    newMessage: MessageInterface
+  ): Observable<MessageInterface[]> {
+    if (!contactKey) {
+      return of([]);
+    }
+    return this.http
+      .post<void>(`${BASE_URL}contacts/${contactKey}/messages.json`, newMessage)
+      .pipe(
+        switchMap(() => this.getMessages(contactKey)),
+        catchError((err) => {
+          console.error('Error adding message:', err);
+          return of([]);
+        })
+      );
+  }
+
+  getBotResponse(contactKey: string): Observable<MessageInterface> {
+    return this.http
+      .get<{ author: string; quote: string }>(
+        'https://programming-quotesapi.vercel.app/api/random'
+      )
+      .pipe(
+        map((response) => {
+          return {
+            message: `${response.quote}`,
+            time: new Date().toISOString(),
+            sender: 'Bot',
+          };
+        }),
+        catchError((err) => {
+          console.error('Error getting bot response:', err);
+          return of({
+            message: 'Sorry, something went wrong.',
+            time: new Date().toISOString(),
+            sender: 'Bot',
+          });
+        })
+      );
+  }
+
+  // Get messages for a specific contact
+  getMessages(key: string): Observable<MessageInterface[]> {
+    return this.http
+      .get<{ [key: string]: MessageInterface }>(
+        `${BASE_URL}contacts/${key}/messages.json`
+      )
+      .pipe(
+        map((response) => {
+          if (!response) return [];
+          return Object.values(response);
+        }),
+        catchError((err) => {
+          console.error('Error fetching messages:', err);
+          return of([]);
+        })
+      );
   }
 
   getMyData(): Observable<any> {
     return this.http.get<any>(this.myUrl);
-  }
-
-  createPerson(person: any): void {
-    console.log('Adding person:', person);
-    const currentPersons = this.personsSubject.value;
-    this.personsSubject.next([...currentPersons, person]);
-  }
-
-  getPersonsData(): Observable<any[]> {
-    return this.personsSubject.asObservable();
-  }
-
-  updatePerson(updatedPerson: any): void {
-    const currentPersons = this.personsSubject.value;
-
-    const updatedPersons = currentPersons.map((person) =>
-      person.name === updatedPerson.originalName
-        ? { ...person, ...updatedPerson }
-        : person
-    );
-
-    this.personsSubject.next(updatedPersons);
-  }
-
-  deletePerson(name: string): void {
-    const currentPersons = this.personsSubject.value;
-    const filteredPersons = currentPersons.filter(
-      (person) => person.name !== name
-    );
-    this.personsSubject.next(filteredPersons);
-  }
-
-  addMessageToPerson(name: string, newMessage: any): void {
-    const currentPersons = this.personsSubject.value;
-
-    const updatedPersons = currentPersons.map((person) => {
-      if (person.name === name) {
-        return {
-          ...person,
-          message: [...person.message, newMessage], // Додаємо нове повідомлення
-          lastMessage: newMessage.message, // Оновлюємо останнє повідомлення
-          time: newMessage.time, // Оновлюємо час останнього повідомлення
-        };
-      }
-      return person;
-    });
-
-    this.personsSubject.next(updatedPersons);
-  }
-
-  getCurrentPersons(): any[] {
-    return this.personsSubject.value;
-  }
-
-  // getRandomQuote(): Observable<string> {
-  //   const url = 'http://api.quotable.io/random';
-  //   return this.http
-  //     .get<any>(url)
-  //     .pipe(
-  //       map((response) => response.content || 'I am here to chat with you!')
-  //     );
-  // }
-  getRandomQuote(): Observable<string> {
-    const url = 'https://programming-quotesapi.vercel.app/api/random';
-    return this.http.get<any>(url).pipe(
-      map((response) => {
-        if (response && response.quote) {
-          return response.quote; // Extract quote from the new property
-        } else {
-          console.error('Unexpected response structure from API:', response);
-          return 'An unknown error occurred while retrieving the quote.';
-        }
-      }),
-      catchError((error) => {
-        console.error('There was an error getting the quote:', error);
-        return of(
-          'An error occurred while receiving the quote. Please try again later.'
-        );
-      })
-    );
   }
 }
