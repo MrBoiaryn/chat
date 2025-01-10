@@ -32,7 +32,7 @@
   </div>
 
   <div class="container_chat" #chatContainer>
-    <div *ngIf="messages && messages.length > 0; else noMessages">
+    <div *ngIf="messages && messages.length > 0; else noMessages; ">
       <div *ngFor="let message of messages">
         <div *ngIf="!isMyMessage(message.sender)" class="chat_message_auto">
           <div class="message_container">
@@ -43,7 +43,10 @@
         </div>
 
         <div *ngIf="isMyMessage(message.sender)" class="chat_message_my">
-          <p class="chat_message_my_text">{{ message.message }}</p>
+          <div class="my_message_container">
+            <p class="chat_message_my_text">{{ message.message }}</p>
+            <button class="btn" (click)="editMessage(message)"><mat-icon>edit</mat-icon></button>
+          </div>
           <p class="chat_message_my_time">{{ message.time | date:'shortTime' }}</p>
         </div>
       </div>
@@ -57,11 +60,19 @@
   </div>
 
 
-  <div class="container_message">
+  <!-- <div class="container_message">
     <input type="text" placeholder="Type your message" [(ngModel)]="newMessageContent" (keydown.enter)="sendMessage()"
       #messageInput>
     <button class="btn" (click)="sendMessage()" [disabled]="!newMessageContent.trim()">
       <mat-icon>send</mat-icon>
+    </button>
+  </div> -->
+
+  <div class="container_message">
+    <input type="text" placeholder="Type your message" [(ngModel)]="newMessageContent" (keydown.enter)="sendMessage()"
+      #messageInput />
+    <button class="btn" (click)="sendMessage()" [disabled]="!newMessageContent.trim()">
+      <mat-icon>{{ isEditingMessage ? 'save' : 'send' }}</mat-icon>
     </button>
   </div>
 

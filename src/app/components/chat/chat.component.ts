@@ -58,6 +58,8 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
   notifications: { name: string; surname: string; message: string }[] = [];
 
   newMessageContent: string = '';
+  isEditingMessage: boolean = false;
+  editingMessageKey: string | null = null;
 
   constructor(private httpService: HttpService) {}
 
@@ -111,14 +113,20 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
   deletePerson(): void {
     if (!this.contactKey) return;
 
-    this.httpService.deleteContact(this.contactKey).subscribe({
-      next: () => {
-        this.contactDeleted.emit(this.contactKey); // Передаємо ключ контакту
-      },
-      error: (err) => {
-        console.error('Error deleting contact:', err);
-      },
-    });
+    const confirmation = window.confirm(
+      `Are you sure you want to delete this contact: ${this.name} ${this.surname}?`
+    );
+
+    if (confirmation) {
+      this.httpService.deleteContact(this.contactKey).subscribe({
+        next: () => {
+          this.contactDeleted.emit(this.contactKey); // Передаємо ключ контакту
+        },
+        error: (err) => {
+          console.error('Error deleting contact:', err);
+        },
+      });
+    }
   }
 
   selectPerson(contact: ContactInterface): void {
@@ -249,4 +257,6 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
   closeNotification(notification: any): void {
     this.notifications = this.notifications.filter((n) => n !== notification);
   }
+
+  editMessage(message: MessageInterface): void {}
 }

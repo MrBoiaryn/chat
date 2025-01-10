@@ -112,6 +112,21 @@
         font-size: 14px;
       }
 
+      .my_message_container{
+        display: flex;
+      }
+
+      .btn{
+        border: none;
+        background-color: white;
+        cursor: pointer;
+        color: gray;
+
+        &:hover{
+          color: black;
+        }
+      }
+
       .chat_message_my_time{
         color: gray;
         font-size: 12px;
