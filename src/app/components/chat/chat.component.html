@@ -66,7 +66,7 @@
     <input type="text" placeholder="Type your message" [(ngModel)]="newMessageContent" (keydown.enter)="sendMessage()"
       #messageInput />
     <button class="btn" (click)="sendMessage()" [disabled]="!newMessageContent.trim()">
-      <mat-icon>{{ isEditingMessage ? 'save' : 'send' }}</mat-icon>
+      <mat-icon>{{ isEditingMessage ? 'check' : 'send' }}</mat-icon>
     </button>
   </div>
 
