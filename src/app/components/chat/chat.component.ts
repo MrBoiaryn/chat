@@ -179,6 +179,36 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
     this.contactUpdated.emit(contact);
   }
 
+  // saveChanges(): void {
+  //   if (!this.contactKey) return;
+
+  //   const updatedContact: ContactInterface = {
+  //     key: this.contactKey,
+  //     name: this.editedName,
+  //     surname: this.editedSurname,
+  //     imgUrl: this.imgUrl || '',
+  //     lastMessage:
+  //       this.messages.length > 0
+  //         ? this.messages[this.messages.length - 1].message
+  //         : '',
+  //     time: new Date().toISOString(),
+  //     messages: this.messages,
+  //   };
+
+  //   this.httpService.updateContact(this.contactKey, updatedContact).subscribe({
+  //     next: () => {
+  //       this.name = this.editedName;
+  //       this.surname = this.editedSurname;
+  //       this.isEditing = false;
+  //       this.contactUpdated.emit(updatedContact);
+  //       this.editingStateChanged.emit(false);
+  //     },
+  //     error: (err) => {
+  //       console.error('Error saving changes:', err);
+  //     },
+  //   });
+  // }
+
   saveChanges(): void {
     if (!this.contactKey) return;
 
@@ -192,7 +222,6 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
           ? this.messages[this.messages.length - 1].message
           : '',
       time: new Date().toISOString(),
-      messages: this.messages,
     };
 
     this.httpService.updateContact(this.contactKey, updatedContact).subscribe({
@@ -259,15 +288,33 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
       });
   }
 
+  // private updateLastMessageOnServer(lastMessage: MessageInterface): void {
+  //   const updatedContact: ContactInterface = {
+  //     key: this.contactKey!,
+  //     name: this.name || '',
+  //     surname: this.surname || '',
+  //     imgUrl: this.imgUrl || '',
+  //     lastMessage: lastMessage.message,
+  //     time: lastMessage.time,
+  //     messages: this.messages,
+  //   };
+
+  //   this.httpService.updateContact(this.contactKey!, updatedContact).subscribe({
+  //     next: () => {
+  //       this.lastMessageUpdated.emit({
+  //         contactKey: this.contactKey!,
+  //         lastMessage: lastMessage.message,
+  //         time: lastMessage.time,
+  //       });
+  //     },
+  //     error: (err) => console.error('Error updating last message:', err),
+  //   });
+  // }
+
   private updateLastMessageOnServer(lastMessage: MessageInterface): void {
-    const updatedContact: ContactInterface = {
-      key: this.contactKey!,
-      name: this.name || '',
-      surname: this.surname || '',
-      imgUrl: this.imgUrl || '',
+    const updatedContact: Partial<ContactInterface> = {
       lastMessage: lastMessage.message,
       time: lastMessage.time,
-      messages: this.messages,
     };
 
     this.httpService.updateContact(this.contactKey!, updatedContact).subscribe({

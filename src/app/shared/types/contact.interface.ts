@@ -7,5 +7,5 @@ export interface ContactInterface {
   imgUrl: string;
   lastMessage: string;
   time: string;
-  messages: Array<MessageInterface>;
+  messages?: Array<MessageInterface>;
 }

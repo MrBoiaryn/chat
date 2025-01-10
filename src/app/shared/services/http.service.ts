@@ -70,13 +70,27 @@ export class HttpService {
   }
 
   // Update a contact's information
-  updateContact(key: string, contact: ContactInterface): Observable<void> {
-    return this.http.put<void>(`${BASE_URL}contacts/${key}.json`, contact).pipe(
-      catchError((err) => {
-        console.error('Error updating contact:', err);
-        return of();
-      })
-    );
+  // updateContact(key: string, contact: ContactInterface): Observable<void> {
+  //   return this.http.put<void>(`${BASE_URL}contacts/${key}.json`, contact).pipe(
+  //     catchError((err) => {
+  //       console.error('Error updating contact:', err);
+  //       return of();
+  //     })
+  //   );
+  // }
+
+  updateContact(
+    key: string,
+    contact: Partial<ContactInterface>
+  ): Observable<void> {
+    return this.http
+      .patch<void>(`${BASE_URL}contacts/${key}.json`, contact)
+      .pipe(
+        catchError((err) => {
+          console.error('Error updating contact:', err);
+          return of();
+        })
+      );
   }
 
   // Delete a contact
