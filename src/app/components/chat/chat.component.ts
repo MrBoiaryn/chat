@@ -138,6 +138,7 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
             this.messages.push(newMessage);
             this.newMessageContent = '';
             this.scrollToBottom();
+            this.updateLastMessageOnServer(newMessage);
             setTimeout(() => this.getBotResponse(), 3000);
           },
           error: (err) => console.error('Error adding message:', err),
@@ -275,7 +276,7 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
               botMessage.key = response.name;
               this.messages.push(botMessage);
 
-              // this.updateLastMessageOnServer(botMessage);
+              this.updateLastMessageOnServer(botMessage);
               this.addNotification(
                 this.name || '',
                 this.surname || '',
