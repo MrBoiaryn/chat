@@ -1,5 +1,6 @@
 import {
   Component,
+  DoCheck,
   EventEmitter,
   Input,
   OnChanges,
@@ -19,7 +20,7 @@ import { ContactInterface } from '../../shared/types/contact.interface';
   templateUrl: './chats.component.html',
   styleUrl: './chats.component.scss',
 })
-export class ChatsComponent implements OnInit, OnChanges {
+export class ChatsComponent implements OnInit, OnChanges, DoCheck {
   // @Output() personSelected = new EventEmitter<any>();
   // @Output() contactsUpdated = new EventEmitter<void>();
   @Input() contacts: ContactInterface[] = [];
@@ -28,6 +29,8 @@ export class ChatsComponent implements OnInit, OnChanges {
   @Output() personSelected = new EventEmitter<ContactInterface>();
   // contacts: ContactInterface[] = [];
   selectedContact: ContactInterface | null = null; // Додано змінну
+
+  private previousContacts: string = '';
 
   // contacts: ContactInterface[] = [];
   // selectedContact: any = null;
@@ -40,12 +43,22 @@ export class ChatsComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['contacts'] && !changes['contacts'].firstChange) {
-      console.log('Contacts updated:', this.contacts);
+      console.log('Contacts updated-----:', this.contacts);
+      this.sortContacts();
+    }
+  }
+
+  ngDoCheck(): void {
+    const currentContacts = JSON.stringify(this.contacts);
+    if (currentContacts !== this.previousContacts) {
+      this.previousContacts = currentContacts;
+      this.sortContacts();
     }
   }
 
   refreshContacts(): void {
     this.loadContacts(); // Метод, який завантажує список контактів
+    this.sortContacts();
   }
 
   // Load contacts from Firebase
@@ -53,6 +66,7 @@ export class ChatsComponent implements OnInit, OnChanges {
     this.httpService.getContacts().subscribe({
       next: (contacts) => {
         this.contacts = contacts;
+        this.sortContacts(); // Сортуємо контакти після завантаження
         console.log('Contacts loaded:', this.contacts);
       },
       error: (err) => {
@@ -69,6 +83,7 @@ export class ChatsComponent implements OnInit, OnChanges {
       return;
     }
     this.selectedContact = contact;
+    this.sortContacts();
     this.personSelected.emit(contact);
   }
 
@@ -76,6 +91,7 @@ export class ChatsComponent implements OnInit, OnChanges {
     this.contacts = this.contacts.filter(
       (contact) => contact.key !== contactKey
     );
+    this.sortContacts(); // Оновлюємо сортування після видалення контакту
   }
 
   // Delete a contact
@@ -88,6 +104,14 @@ export class ChatsComponent implements OnInit, OnChanges {
       error: (err) => {
         console.error('Error deleting contact:', err);
       },
+    });
+  }
+
+  private sortContacts(): void {
+    this.contacts.sort((a, b) => {
+      const dateA = new Date(a.time || '').getTime();
+      const dateB = new Date(b.time || '').getTime();
+      return dateB - dateA; // Сортуємо за спаданням дати
     });
   }
 }
