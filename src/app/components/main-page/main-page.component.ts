@@ -48,9 +48,7 @@ export class MainPageComponent implements OnInit {
   }
 
   loadAllMessages(): void {
-    this.httpService.getContacts().subscribe((allPersons) => {
-      console.log('All messages loaded:', allPersons);
-    });
+    this.httpService.getContacts().subscribe((allPersons) => {});
   }
 
   onPersonSelected(person: any) {

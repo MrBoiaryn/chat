@@ -12,7 +12,7 @@
   </div>
 
   <div class="container_search">
-    <input type="text" placeholder="Search or start new chat" [(ngModel)]="searchTerm" />
+    <input type="text" placeholder="Search or start new chat" [(ngModel)]="searchTerm" (input)="onSearch()" />
     <mat-icon>search</mat-icon>
   </div>
 

@@ -65,7 +65,6 @@ export class HttpService {
 
   deleteContact(key: string): Observable<void> {
     return this.http.delete<void>(`${BASE_URL}contacts/${key}.json`).pipe(
-      tap(() => console.log(`Contact ${key} deleted`)),
       catchError((err) => {
         console.error('Error deleting contact:', err);
         return of();

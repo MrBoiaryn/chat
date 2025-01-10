@@ -36,7 +36,6 @@ export class ChatsComponent implements OnInit, OnChanges, DoCheck {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['contacts'] && !changes['contacts'].firstChange) {
-      console.log('Contacts updated-----:', this.contacts);
       this.sortContacts();
     }
   }
@@ -59,7 +58,6 @@ export class ChatsComponent implements OnInit, OnChanges, DoCheck {
       next: (contacts) => {
         this.contacts = contacts;
         this.sortContacts();
-        console.log('Contacts loaded:', this.contacts);
       },
       error: (err) => {
         console.error('Error loading contacts:', err);
@@ -88,7 +86,6 @@ export class ChatsComponent implements OnInit, OnChanges, DoCheck {
   deleteContact(contactKey: string): void {
     this.httpService.deleteContact(contactKey).subscribe({
       next: () => {
-        console.log('Contact deleted:', contactKey);
         this.loadContacts();
       },
       error: (err) => {

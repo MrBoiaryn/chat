@@ -38,6 +38,7 @@ export class HeaderComponent {
   @Input() refreshContacts!: () => void;
 
   @Output() chatSelected = new EventEmitter<string>();
+  @Output() searchEvent = new EventEmitter<string>();
 
   constructor(private httpService: HttpService, private dialog: MatDialog) {}
 
@@ -55,7 +56,6 @@ export class HeaderComponent {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        console.log(`Dialog result: ${result}`);
       }
     });
   }
@@ -74,9 +74,11 @@ export class HeaderComponent {
 
   private loadAllMessages() {
     this.httpService.getContacts().subscribe((allPersons) => {
-      this.allMessages = allPersons.flatMap((person: any) => {
-        const messages = Array.isArray(person.messages) ? person.messages : [];
-        return messages.map((msg: any) => ({
+      this.allMessages = allPersons.flatMap((person) => {
+        if (!Array.isArray(person.messages)) {
+          return [];
+        }
+        return person.messages.map((msg) => ({
           name: person.name,
           surname: person.surname,
           message: msg.message,
@@ -84,5 +86,9 @@ export class HeaderComponent {
         }));
       });
     });
+  }
+
+  onSearch(): void {
+    this.searchEvent.emit(this.searchTerm);
   }
 }

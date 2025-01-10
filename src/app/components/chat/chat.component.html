@@ -4,6 +4,7 @@
 
     <div class="container_header_info">
       <ng-container *ngIf="!isEditing; else editMode">
+        <img [src]="imgUrl" alt="avatar">
         <p>{{ name }} {{ surname }}</p>
       </ng-container>
 
@@ -41,7 +42,7 @@
             <img [src]="imgUrl" alt="avatar">
             <p>{{ message.message }}</p>
           </div>
-          <p class="chat_message_auto_time">{{ message.time | date:'shortTime' }}</p>
+          <p class="chat_message_auto_time">{{ message.time | date:'short' }}</p>
         </div>
 
         <div *ngIf="isMyMessage(message.sender)" class="chat_message_my">
@@ -49,7 +50,7 @@
             <p class="chat_message_my_text">{{ message.message }}</p>
             <button class="btn" (click)="editMessage(message)"><mat-icon>edit</mat-icon></button>
           </div>
-          <p class="chat_message_my_time">{{ message.time | date:'shortTime' }}</p>
+          <p class="chat_message_my_time">{{ message.time | date:'short' }}</p>
         </div>
       </div>
     </div>

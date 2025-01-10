@@ -3,10 +3,13 @@ import {
   Component,
   EventEmitter,
   Input,
+  OnChanges,
+  OnInit,
   Output,
   ViewEncapsulation,
 } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { HttpService } from '../../shared/services/http.service';
 
 @Component({
   selector: 'app-search',
@@ -15,7 +18,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   styleUrl: './search.component.scss',
   encapsulation: ViewEncapsulation.None,
 })
-export class SearchComponent {
+export class SearchComponent implements OnInit, OnChanges {
   @Input() messages: Array<{
     name: string;
     surname: string;
@@ -26,13 +29,55 @@ export class SearchComponent {
 
   @Output() searchEvent = new EventEmitter<string>();
 
+  allMessages: Array<{
+    name: string;
+    surname: string;
+    message: string;
+    time: string;
+  }> = [];
+  filteredMessages: Array<{
+    name: string;
+    surname: string;
+    message: string;
+    time: string;
+  }> = [];
+
   searchQuery: string = '';
 
-  constructor(private sanitizer: DomSanitizer) {}
+  constructor(
+    private sanitizer: DomSanitizer,
+    private httpService: HttpService
+  ) {}
 
-  get filteredMessages() {
+  ngOnInit(): void {
+    this.loadAllMessages();
+  }
+
+  ngOnChanges(): void {
+    this.filterMessages();
+  }
+
+  private loadAllMessages(): void {
+    this.httpService.getContacts().subscribe((allPersons) => {
+      this.allMessages = allPersons.flatMap((person) => {
+        const messagesArray = person.messages
+          ? Object.values(person.messages)
+          : [];
+        return messagesArray.map((msg: any) => ({
+          name: person.name,
+          surname: person.surname,
+          message: msg.message,
+          time: msg.time,
+        }));
+      });
+
+      this.filterMessages();
+    });
+  }
+
+  private filterMessages(): void {
     const term = this.searchTerm.toLowerCase();
-    return this.messages
+    this.filteredMessages = this.allMessages
       .filter((msg) => msg.message.toLowerCase().includes(term))
       .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
   }
@@ -46,6 +91,6 @@ export class SearchComponent {
   }
 
   onSearch(): void {
-    this.searchEvent.emit(this.searchQuery);
+    this.searchEvent.emit(this.searchTerm);
   }
 }

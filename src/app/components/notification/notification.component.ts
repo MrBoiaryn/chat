@@ -16,7 +16,6 @@ export class NotificationComponent {
   @Output() close = new EventEmitter<void>();
 
   closeNotification(): void {
-    console.log('Notification closed');
     this.close.emit();
   }
 }
