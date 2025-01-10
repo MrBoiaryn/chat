@@ -65,15 +65,21 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
   constructor(private httpService: HttpService) {}
 
   ngOnInit(): void {
+    console.log('[ngOnInit] - ChatComponent ініціалізовано');
+
     this.loadMessages();
   }
 
   ngAfterViewInit(): void {
+    console.log('[ngAfterViewInit] - DOM повністю завантажено');
+
     this.scrollToBottom();
     this.focusMessageInput();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    console.log('[ngOnChanges] - Зміни в @Input:', changes);
+
     if (changes['messages']) {
       this.scrollToBottom();
     }
@@ -177,6 +183,8 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
   }
 
   saveChanges(): void {
+    console.log('[saveChanges] - Збереження змін');
+
     if (!this.contactKey) return;
 
     const updatedContact: ContactInterface = {
@@ -197,6 +205,7 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
         this.surname = this.editedSurname;
         this.isEditing = false;
         this.contactUpdated.emit(updatedContact);
+        // this.contactUpdated.emit({ ...updatedContact });
         this.editingStateChanged.emit(false);
       },
       error: (err) => {
@@ -274,6 +283,11 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
   }
 
   private loadMessages(): void {
+    console.log(
+      '[loadMessages] - Завантаження повідомлень для контакту:',
+      this.contactKey
+    );
+
     this.httpService.getMessages(this.contactKey!).subscribe((messages) => {
       this.messages = messages || [];
       this.scrollToBottom();
