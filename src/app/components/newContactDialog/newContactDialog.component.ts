@@ -20,7 +20,6 @@ export class NewContactDialogComponent implements OnInit {
   name = '';
   surname = '';
   selectedGender: string = 'male';
-  // contacts: ContactInterface[] = [];
 
   @Input() updateContacts!: () => void;
 
@@ -32,7 +31,6 @@ export class NewContactDialogComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  // Submit the new contact to Firebase
   onSubmit(): void {
     if (!this.name || !this.surname) {
       return;
@@ -51,8 +49,8 @@ export class NewContactDialogComponent implements OnInit {
 
     this.httpService.createContact(newPerson).subscribe({
       next: () => {
-        this.data.refreshContacts(); // Оновлюємо список контактів
-        this.dialogRef.close(); // Закриваємо діалог
+        this.data.refreshContacts();
+        this.dialogRef.close();
       },
       error: (err) => {
         console.error('Error creating contact:', err);
@@ -60,7 +58,6 @@ export class NewContactDialogComponent implements OnInit {
     });
   }
 
-  // Generate a random avatar number based on gender
   private generateRandomAvatarNumber(gender: string): number {
     const maleAvatars = [1, 3, 5];
     const femaleAvatars = [2, 4, 6];

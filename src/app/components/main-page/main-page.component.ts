@@ -36,7 +36,7 @@ export class MainPageComponent implements OnInit {
   }
 
   onPersonDeleted(contactKey: string): void {
-    this.selectedPerson = null; // Скидаємо вибраний контакт
+    this.selectedPerson = null;
 
     this.contacts = this.contacts.filter(
       (contact) => contact.key !== contactKey
@@ -44,7 +44,7 @@ export class MainPageComponent implements OnInit {
   }
 
   refreshContacts(): void {
-    this.loadContacts(); // Метод для оновлення контактів
+    this.loadContacts();
   }
 
   loadAllMessages(): void {
@@ -52,14 +52,6 @@ export class MainPageComponent implements OnInit {
       console.log('All messages loaded:', allPersons);
     });
   }
-
-  // onPersonSelected(contact: ContactInterface): void {
-  //   if (this.isEditing) {
-  //     alert('You cannot switch chats while editing.');
-  //     return;
-  //   }
-  //   this.selectedPerson = contact ?? null;
-  // }
 
   onPersonSelected(person: any) {
     if (this.isEditing) {

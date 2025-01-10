@@ -13,10 +13,10 @@ export class NotificationComponent {
   @Input() name: string = '';
   @Input() surname: string = '';
   @Input() message: string = '';
-  @Output() close = new EventEmitter<void>(); // Подія для закриття нотифікації
+  @Output() close = new EventEmitter<void>();
 
   closeNotification(): void {
     console.log('Notification closed');
-    this.close.emit(); // Відправляємо подію закриття
+    this.close.emit();
   }
 }

@@ -90,7 +90,6 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
       this.editingMessage &&
       this.editingMessageKey
     ) {
-      // 🛠 Оновлення існуючого повідомлення
       const updatedMessage: MessageInterface = {
         ...this.editingMessage,
         message: this.newMessageContent.trim(),
@@ -105,7 +104,6 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
         )
         .subscribe({
           next: () => {
-            // 🔄 Знаходимо і оновлюємо повідомлення у локальному масиві
             const index = this.messages.findIndex(
               (msg) => msg.key === this.editingMessageKey
             );
@@ -113,7 +111,6 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
               this.messages[index] = updatedMessage;
             }
 
-            // Скидаємо стан редагування
             this.newMessageContent = '';
             this.isEditingMessage = false;
             this.editingMessage = null;
@@ -123,7 +120,6 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
           error: (err) => console.error('Error updating message:', err),
         });
     } else {
-      // ➕ Створення нового повідомлення
       const newMessage: MessageInterface = {
         message: this.newMessageContent.trim(),
         time: new Date().toISOString(),
@@ -163,7 +159,7 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
     if (confirmation) {
       this.httpService.deleteContact(this.contactKey).subscribe({
         next: () => {
-          this.contactDeleted.emit(this.contactKey); // Передаємо ключ контакту
+          this.contactDeleted.emit(this.contactKey);
         },
         error: (err) => {
           console.error('Error deleting contact:', err);
@@ -179,36 +175,6 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
     }
     this.contactUpdated.emit(contact);
   }
-
-  // saveChanges(): void {
-  //   if (!this.contactKey) return;
-
-  //   const updatedContact: ContactInterface = {
-  //     key: this.contactKey,
-  //     name: this.editedName,
-  //     surname: this.editedSurname,
-  //     imgUrl: this.imgUrl || '',
-  //     lastMessage:
-  //       this.messages.length > 0
-  //         ? this.messages[this.messages.length - 1].message
-  //         : '',
-  //     time: new Date().toISOString(),
-  //     messages: this.messages,
-  //   };
-
-  //   this.httpService.updateContact(this.contactKey, updatedContact).subscribe({
-  //     next: () => {
-  //       this.name = this.editedName;
-  //       this.surname = this.editedSurname;
-  //       this.isEditing = false;
-  //       this.contactUpdated.emit(updatedContact);
-  //       this.editingStateChanged.emit(false);
-  //     },
-  //     error: (err) => {
-  //       console.error('Error saving changes:', err);
-  //     },
-  //   });
-  // }
 
   saveChanges(): void {
     if (!this.contactKey) return;
@@ -241,7 +207,7 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
 
   cancelChanges(): void {
     this.isEditing = false;
-    this.editingStateChanged.emit(false); // Передаємо стан редагування
+    this.editingStateChanged.emit(false);
   }
 
   isMyMessage(sender: string): boolean {
@@ -289,29 +255,6 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
       });
   }
 
-  // private updateLastMessageOnServer(lastMessage: MessageInterface): void {
-  //   const updatedContact: ContactInterface = {
-  //     key: this.contactKey!,
-  //     name: this.name || '',
-  //     surname: this.surname || '',
-  //     imgUrl: this.imgUrl || '',
-  //     lastMessage: lastMessage.message,
-  //     time: lastMessage.time,
-  //     messages: this.messages,
-  //   };
-
-  //   this.httpService.updateContact(this.contactKey!, updatedContact).subscribe({
-  //     next: () => {
-  //       this.lastMessageUpdated.emit({
-  //         contactKey: this.contactKey!,
-  //         lastMessage: lastMessage.message,
-  //         time: lastMessage.time,
-  //       });
-  //     },
-  //     error: (err) => console.error('Error updating last message:', err),
-  //   });
-  // }
-
   private updateLastMessageOnServer(lastMessage: MessageInterface): void {
     const updatedContact: Partial<ContactInterface> = {
       lastMessage: lastMessage.message,
@@ -354,7 +297,6 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
     const notification = { name, surname, message };
     this.notifications.push(notification);
 
-    // Автоматичне закриття через 10 секунд
     setTimeout(() => this.closeNotification(notification), 10000);
   }
 

@@ -13,7 +13,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   imports: [CommonModule],
   templateUrl: './search.component.html',
   styleUrl: './search.component.scss',
-  encapsulation: ViewEncapsulation.None, // Вимикає ізоляцію стилів
+  encapsulation: ViewEncapsulation.None,
 })
 export class SearchComponent {
   @Input() messages: Array<{
