@@ -60,6 +60,7 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
   newMessageContent: string = '';
   isEditingMessage: boolean = false;
   editingMessageKey: string | null = null;
+  editingMessage: MessageInterface | null = null;
 
   constructor(private httpService: HttpService) {}
 
@@ -84,23 +85,64 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
   sendMessage(): void {
     if (!this.newMessageContent.trim() || !this.contactKey) return;
 
-    const newMessage: MessageInterface = {
-      message: this.newMessageContent.trim(),
-      time: new Date().toISOString(),
-      sender: 'User',
-    };
+    if (
+      this.isEditingMessage &&
+      this.editingMessage &&
+      this.editingMessageKey
+    ) {
+      // 🛠 Оновлення існуючого повідомлення
+      const updatedMessage: MessageInterface = {
+        ...this.editingMessage,
+        message: this.newMessageContent.trim(),
+        time: new Date().toISOString(),
+      };
 
-    this.messages.push(newMessage);
-    this.scrollToBottom();
-    this.newMessageContent = '';
+      this.httpService
+        .updateMessage(
+          this.contactKey!,
+          this.editingMessageKey!,
+          updatedMessage
+        )
+        .subscribe({
+          next: () => {
+            // 🔄 Знаходимо і оновлюємо повідомлення у локальному масиві
+            const index = this.messages.findIndex(
+              (msg) => msg.key === this.editingMessageKey
+            );
+            if (index !== -1) {
+              this.messages[index] = updatedMessage;
+            }
 
-    this.httpService
-      .addMessageToContact(this.contactKey, newMessage)
-      .subscribe(() => {
-        this.updateLastMessageOnServer(newMessage);
-        this.loadMessages();
-        setTimeout(() => this.getBotResponse(), 3000);
-      });
+            // Скидаємо стан редагування
+            this.newMessageContent = '';
+            this.isEditingMessage = false;
+            this.editingMessage = null;
+            this.editingMessageKey = null;
+            this.scrollToBottom();
+          },
+          error: (err) => console.error('Error updating message:', err),
+        });
+    } else {
+      // ➕ Створення нового повідомлення
+      const newMessage: MessageInterface = {
+        message: this.newMessageContent.trim(),
+        time: new Date().toISOString(),
+        sender: 'User',
+      };
+
+      this.httpService
+        .addMessageToContact(this.contactKey!, newMessage)
+        .subscribe({
+          next: (response: { name: string }) => {
+            newMessage.key = response.name;
+            this.messages.push(newMessage);
+            this.newMessageContent = '';
+            this.scrollToBottom();
+            setTimeout(() => this.getBotResponse(), 3000);
+          },
+          error: (err) => console.error('Error adding message:', err),
+        });
+    }
   }
 
   editPerson(): void {
@@ -194,17 +236,27 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
   private getBotResponse(): void {
     if (!this.contactKey) return;
 
-    this.httpService.getBotResponse(this.contactKey).subscribe((botMessage) => {
-      this.messages.push(botMessage);
-      this.scrollToBottom();
-      this.updateLastMessageOnServer(botMessage);
-      // this.newNotification.emit({ message: botMessage.message });
+    this.httpService
+      .getBotResponse(this.contactKey, this.name || 'Bot', this.surname || '')
+      .subscribe((botMessage) => {
+        this.httpService
+          .addMessageToContact(this.contactKey!, botMessage)
+          .subscribe({
+            next: (response) => {
+              botMessage.key = response.name;
+              this.messages.push(botMessage);
 
-      this.addNotification(
-        `${this.name || 'Bot'} ${this.surname || ''}`.trim(),
-        botMessage.message
-      );
-    });
+              // this.updateLastMessageOnServer(botMessage);
+              this.addNotification(
+                this.name || '',
+                this.surname || '',
+                botMessage.message
+              );
+              this.scrollToBottom();
+            },
+            error: (err) => console.error('Error adding bot response:', err),
+          });
+      });
   }
 
   private updateLastMessageOnServer(lastMessage: MessageInterface): void {
@@ -246,8 +298,12 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
     });
   }
 
-  private addNotification(name: string, message: string): void {
-    const notification = { name, surname: '', message };
+  private addNotification(
+    name: string,
+    surname: string,
+    message: string
+  ): void {
+    const notification = { name, surname, message };
     this.notifications.push(notification);
 
     // Автоматичне закриття через 10 секунд
@@ -258,5 +314,13 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
     this.notifications = this.notifications.filter((n) => n !== notification);
   }
 
-  editMessage(message: MessageInterface): void {}
+  editMessage(message: MessageInterface): void {
+    if (!message.key) return;
+
+    this.newMessageContent = message.message;
+    this.isEditingMessage = true;
+    this.editingMessage = message;
+    this.editingMessageKey = message.key;
+    this.focusMessageInput();
+  }
 }

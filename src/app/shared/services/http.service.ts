@@ -95,22 +95,25 @@ export class HttpService {
   addMessageToContact(
     contactKey: string,
     newMessage: MessageInterface
-  ): Observable<MessageInterface[]> {
-    if (!contactKey) {
-      return of([]);
-    }
+  ): Observable<{ name: string }> {
     return this.http
-      .post<void>(`${BASE_URL}contacts/${contactKey}/messages.json`, newMessage)
+      .post<{ name: string }>(
+        `${BASE_URL}contacts/${contactKey}/messages.json`,
+        newMessage
+      )
       .pipe(
-        switchMap(() => this.getMessages(contactKey)),
         catchError((err) => {
           console.error('Error adding message:', err);
-          return of([]);
+          return of({ name: '' });
         })
       );
   }
 
-  getBotResponse(contactKey: string): Observable<MessageInterface> {
+  getBotResponse(
+    contactKey: string,
+    name: string,
+    surname: string
+  ): Observable<MessageInterface> {
     return this.http
       .get<{ author: string; quote: string }>(
         'https://programming-quotesapi.vercel.app/api/random'
@@ -120,7 +123,7 @@ export class HttpService {
           return {
             message: `${response.quote}`,
             time: new Date().toISOString(),
-            sender: 'Bot',
+            sender: `${name} ${surname}`.trim(), // Використовуємо ім'я та прізвище
           };
         }),
         catchError((err) => {
@@ -128,7 +131,7 @@ export class HttpService {
           return of({
             message: 'Sorry, something went wrong.',
             time: new Date().toISOString(),
-            sender: 'Bot',
+            sender: `${name} ${surname}`.trim(),
           });
         })
       );
@@ -154,5 +157,25 @@ export class HttpService {
 
   getMyData(): Observable<any> {
     return this.http.get<any>(this.myUrl);
+  }
+
+  updateMessage(
+    contactKey: string,
+    messageKey: string,
+    updatedMessage: MessageInterface
+  ): Observable<void> {
+    if (!contactKey || !messageKey) {
+      console.error('Invalid contactKey or messageKey');
+      return of();
+    }
+
+    const url = `${BASE_URL}contacts/${contactKey}/messages/${messageKey}.json`;
+
+    return this.http.put<void>(url, updatedMessage).pipe(
+      catchError((err) => {
+        console.error(`Error updating message with key ${messageKey}:`, err);
+        return of();
+      })
+    );
   }
 }
