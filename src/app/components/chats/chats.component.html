@@ -3,7 +3,6 @@
 
   <div class="container_chats">
     <ul>
-      <!-- <li *ngFor="let contact of contacts; trackBy: trackByContact" class="person_chat" (click)="selectPerson(contact)" -->
       <li *ngFor="let contact of contacts" class="person_chat" (click)="selectPerson(contact)"
         [class.selected]="contact === selectedContact">
         <div class="container_person_chat">

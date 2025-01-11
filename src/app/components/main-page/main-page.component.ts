@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { HeaderComponent } from '../header/header.component';
 import { ChatsComponent } from '../chats/chats.component';
 import { ChatComponent } from '../chat/chat.component';
 import { CommonModule } from '@angular/common';
-// import { HttpService } from '../../shared/services/http.service';
 import { Contact } from '../../shared/types/contact.interface';
 import { MessageRepository } from '../../shared/classes/messageRepository';
 import { getDatabase, ref } from 'firebase/database';
@@ -17,16 +16,13 @@ import { BotService } from '../../shared/services/botService';
   templateUrl: './main-page.component.html',
   styleUrl: './main-page.component.scss',
   providers: [
-    //  Provide messageRepository
     {
-      provide: MessageRepository, // The class being provided
+      provide: MessageRepository,
       useFactory: () => {
-        // Factory function
-        const db = getDatabase(); // Get the database instance
-        const dbRef = ref(db, 'contacts'); // Correct database reference
+        const db = getDatabase();
+        const dbRef = ref(db, 'contacts');
         return new MessageRepository(dbRef);
       },
-      // deps: [HttpService], // Dependencies of the factory function
     },
     {
       provide: ChatBot,
@@ -40,44 +36,15 @@ import { BotService } from '../../shared/services/botService';
     },
   ],
 })
-export class MainPageComponent implements OnInit {
+export class MainPageComponent {
   selectedPerson: Contact | null = null;
-  isEditing = false; // Стан редагування
+  isEditing = false;
   contacts: Contact[] = [];
-
-  constructor(
-    // private httpService: HttpService,
-    private messageRepository: MessageRepository
-  ) {}
-
-  ngOnInit(): void {
-    this.loadAllMessages();
-    // this.loadContacts();
-  }
-
-  // loadContacts(): void {
-  //   this.httpService.getContacts().subscribe({
-  //     next: (contacts) => {
-  //       this.contacts = contacts;
-  //     },
-  //     error: (err) => {
-  //       console.error('Error loading contacts:', err);
-  //     },
-  //   });
-  // }
 
   onPersonDeleted(contact: Contact): void {
     this.selectedPerson = null;
 
     this.contacts = this.contacts.filter((c) => c.key !== contact.key);
-  }
-
-  refreshContacts(): void {
-    // this.loadContacts();
-  }
-
-  loadAllMessages(): void {
-    // this.httpService.getContacts().subscribe((allPersons) => {});
   }
 
   onPersonSelected(person: any) {
@@ -90,15 +57,6 @@ export class MainPageComponent implements OnInit {
 
   onEditingStateChanged(isEditing: boolean) {
     this.isEditing = isEditing;
-  }
-
-  onContactUpdated(updatedContact: Contact): void {
-    const index = this.contacts.findIndex(
-      (contact) => contact.key === updatedContact.key
-    );
-    if (index !== -1) {
-      this.contacts[index] = updatedContact;
-    }
   }
 
   onMessagesUpdated(data: {

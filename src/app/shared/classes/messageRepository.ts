@@ -12,7 +12,7 @@ import {
   set,
   update,
 } from 'firebase/database';
-import { BehaviorSubject, Observable, of, Subject } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { Contact } from '../types/contact.interface';
 import { MessageInterface } from '../types/message.interface';
 
@@ -21,35 +21,21 @@ export const DATABASE_REFERENCE = new InjectionToken<DatabaseReference>(
 );
 
 @Injectable({
-  providedIn: 'root', // Make this a service, Injectable at root level
+  providedIn: 'root',
 })
 export class MessageRepository {
   private contact: Map<string, Contact> = new Map();
   public contactUpdated$: BehaviorSubject<Contact | null> =
-    new BehaviorSubject<Contact | null>(null); // Use an RxJS Subject
+    new BehaviorSubject<Contact | null>(null);
 
   constructor(@Inject(DATABASE_REFERENCE) private myRef: DatabaseReference) {
     onChildAdded(this.myRef, (snapshot) => {
       const newChild = snapshot.val();
       const key = snapshot.key;
       if (key && newChild) {
-        const newContact: Contact = new Contact(
-          key,
-          newChild.name,
-          newChild.surname,
-          newChild.imgUrl,
-          newChild.lastMessage,
-          newChild.time,
-          newChild.messages == null
-            ? []
-            : Object.keys(newChild.messages).map((key) => {
-                const message = newChild.messages[key];
-                message.key = key;
-                return message;
-              })
-        );
+        const newContact: Contact = this.createContact(key, newChild);
         this.contact.set(key, newContact);
-        this.contactUpdated$.next(newContact); // Emit the new contact
+        this.contactUpdated$.next(newContact);
       }
     });
 
@@ -58,63 +44,76 @@ export class MessageRepository {
       const key = snapshot.key;
 
       if (key && changedChild) {
-        const updatedContact: Contact = { ...changedChild, key };
+        const updatedContact: Contact = this.createContact(key, changedChild);
         this.contact.set(key, updatedContact);
-        this.contactUpdated$.next(updatedContact); // Emit the updated contact
+        this.contactUpdated$.next(updatedContact);
       }
     });
 
     onChildRemoved(this.myRef, (snapshot) => {
       const key = snapshot.key;
       if (key) {
-        const removedContact = this.contact.get(key);
         this.contact.delete(key);
-
-        if (removedContact) {
-          // It's generally not recommended to emit removed items via next
-          // Instead, components can just filter out the deleted item when it is not present
-          //  in the map after a removal.  That way, components already know the item is deleted.
-          // this.contactUpdated$.next(removedContact); // For informational purposes if needed
-        }
-
-        // console.log('Child removed:', key);
       }
     });
   }
 
-  // Method to get all contacts as an observable
-  // getMessages(contactKey: string): MessageInterface[] {
-  //   return this.contact.get(contactKey)?.messages || [];
-  // }
+  private createContact(key: string, newChild: any): Contact {
+    return new Contact(
+      key,
+      newChild.name,
+      newChild.surname,
+      newChild.imgUrl,
+      newChild.lastMessage,
+      newChild.time,
+      newChild.messages == null
+        ? []
+        : Object.keys(newChild.messages).map((key) => {
+            const message = newChild.messages[key];
+            message.key = key;
+            return message;
+          })
+    );
+  }
 
   sendMessage(contactKey: string, message: string, sender?: string): void {
     const contact = this.contact.get(contactKey);
-    const newMessage: MessageInterface = {
-      message: message,
-      time: new Date().toISOString(),
-      sender: sender ?? 'User',
-    };
+
     if (contact) {
-      let messages = contact.messages || [];
+      const messagesRef = ref(getDatabase(), `contacts/${contactKey}/messages`);
+      const newMessageRef = push(messagesRef);
+      const newMessage: MessageInterface = {
+        message: message,
+        time: new Date().toISOString(),
+        sender: sender ?? 'User',
+        key: newMessageRef.key!,
+      };
+      let messages = Object.values(contact.messages);
       messages.push(newMessage);
       contact.messages = messages;
+      contact.lastMessage = message;
+      contact.time = newMessage.time;
+
       this.contact.set(contactKey, contact);
       this.contactUpdated$.next(contact);
+
+      set(newMessageRef, newMessage);
       update(child(this.myRef, contactKey), contact);
     }
   }
 
-  editMessage(
-    contactKey: string,
-    messageKey: string,
-    message: MessageInterface
-  ): void {
+  editMessage(contactKey: string, messageKey: string, message: string): void {
     const contact = this.contact.get(contactKey);
     if (contact) {
-      let messages = contact.messages || [];
+      let messages = Object.values(contact.messages);
       const index = messages.findIndex((msg) => msg.key === messageKey);
       if (index !== -1) {
-        messages[index] = message;
+        messages[index] = {
+          ...messages[index],
+          message: message,
+          time: new Date().toISOString(),
+        };
+
         contact.messages = messages;
         this.contact.set(contactKey, contact);
         this.contactUpdated$.next(contact);
@@ -147,8 +146,8 @@ export class MessageRepository {
   }
 
   searchMessages(searchTerm: string): MessageInterface[] {
-    if (!searchTerm) {
-      return []; // Return empty array if search term is empty
+    if (!searchTerm || searchTerm.trim() === '') {
+      return [];
     }
 
     const results: MessageInterface[] = [];
@@ -158,14 +157,11 @@ export class MessageRepository {
           if (
             message.message.toLowerCase().includes(searchTerm.toLowerCase())
           ) {
-            // Case-insensitive search
             results.push(message);
           }
         });
       }
     });
-    return results; // Emit the results as an Observable
+    return results;
   }
-
-  // ... any other methods for your repository (getContact, etc.)
 }

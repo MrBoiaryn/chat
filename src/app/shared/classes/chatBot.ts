@@ -3,7 +3,7 @@ import { BotService as BotService } from '../services/botService';
 import { Injectable } from '@angular/core';
 
 @Injectable({
-  providedIn: 'root', // Make this a service, Injectable at root level
+  providedIn: 'root',
 })
 export class ChatBot {
   constructor(

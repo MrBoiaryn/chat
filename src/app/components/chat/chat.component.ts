@@ -4,7 +4,6 @@ import {
   ElementRef,
   EventEmitter,
   Input,
-  OnChanges,
   OnInit,
   Output,
   SimpleChanges,
@@ -13,7 +12,6 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-// import { HttpService } from '../../shared/services/http.service';
 import { FormsModule } from '@angular/forms';
 import { NotificationComponent } from '../notification/notification.component';
 import { MessageInterface } from '../../shared/types/message.interface';
@@ -22,7 +20,6 @@ import { MessageRepository } from '../../shared/classes/messageRepository';
 import { ChatBot } from '../../shared/classes/chatBot';
 import { BotService } from '../../shared/services/botService';
 
-const me = 'Andrii Boiyarin';
 @Component({
   selector: 'app-chat',
   imports: [
@@ -34,11 +31,7 @@ const me = 'Andrii Boiyarin';
   ],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss',
-  providers: [
-    ChatBot, // Provide ChatBot
-    BotService, // Provide BotService
-    // MessageRepository,
-  ],
+  providers: [ChatBot, BotService],
 })
 export class ChatComponent implements AfterViewInit, OnInit {
   @Input() contact: Contact | null = null;
@@ -49,7 +42,7 @@ export class ChatComponent implements AfterViewInit, OnInit {
 
   @Output() contactDeleted = new EventEmitter<Contact>();
   @Output() editingStateChanged = new EventEmitter<boolean>();
-  @Output() contactUpdated = new EventEmitter<Contact>();
+  @Output() contactSelected = new EventEmitter<Contact>();
   @Output() messagesUpdated = new EventEmitter<{
     contactKey: string;
     messages: MessageInterface[];
@@ -78,24 +71,17 @@ export class ChatComponent implements AfterViewInit, OnInit {
   ) {}
 
   ngOnInit(): void {
-    // console.log('[ngOnInit] - ChatComponent ініціалізовано');
-
     this.subscribe();
 
-    // console.log(this.messages);
     this.loadMessages();
   }
 
   ngAfterViewInit(): void {
-    // console.log('[ngAfterViewInit] - DOM повністю завантажено');
-
     this.scrollToBottom();
     this.focusMessageInput();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // console.log('[ngOnChanges] - Зміни в @Input:', changes);
-
     if (changes['messages']) {
       this.scrollToBottom();
     }
@@ -108,26 +94,24 @@ export class ChatComponent implements AfterViewInit, OnInit {
     if (!this.newMessageContent.trim() || !this.contact) return;
 
     if (this.editingMessage) {
-      const updatedMessage: MessageInterface = {
-        ...this.editingMessage,
-        message: this.newMessageContent.trim(),
-        time: new Date().toISOString(),
-      };
-
       this.messageRepository.editMessage(
         this.contact.key!,
         this.editingMessageKey!,
-        updatedMessage
+        this.newMessageContent.trim()
       );
+      this.editingMessage = null;
+      this.editingMessageKey = null;
+      this.isEditingMessage = false;
     } else {
       this.messageRepository.sendMessage(
         this.contact.key!,
         this.newMessageContent.trim()
       );
-      this.newMessageContent = '';
-      this.focusMessageInput();
+
       this.chatBot.generateMessage(this.contact.key!);
     }
+    this.newMessageContent = '';
+    this.focusMessageInput();
   }
 
   editPerson(): void {
@@ -155,12 +139,10 @@ export class ChatComponent implements AfterViewInit, OnInit {
       alert('You cannot switch chats while editing.');
       return;
     }
-    this.contactUpdated.emit(contact);
+    this.contactSelected.emit(contact);
   }
 
   saveChanges(): void {
-    // console.log('[saveChanges] - Збереження змін');
-
     if (!this.contact) return;
 
     const updatedContact: Contact = {
@@ -178,8 +160,7 @@ export class ChatComponent implements AfterViewInit, OnInit {
     this.name = this.editedName;
     this.surname = this.editedSurname;
     this.isEditing = false;
-    this.contactUpdated.emit(updatedContact);
-    // this.contactUpdated.emit({ ...updatedContact });
+    this.contactSelected.emit(updatedContact);
     this.editingStateChanged.emit(false);
     this.messageRepository.updateContact(this.contact.key!, updatedContact);
     this.focusMessageInput();
@@ -226,10 +207,8 @@ export class ChatComponent implements AfterViewInit, OnInit {
         }
       }
 
-      this.messages = contact?.messages.slice() || [];
+      this.messages = contact?.messages ? Object.values(contact?.messages) : [];
       this.scrollToBottom();
-
-      console.log(this.messages);
 
       if (this.messages.length > 0) {
         this.messagesUpdated.emit({
@@ -258,7 +237,6 @@ export class ChatComponent implements AfterViewInit, OnInit {
   }
 
   editMessage(message: MessageInterface): void {
-    console.log('work');
     if (!message.key) return;
 
     this.newMessageContent = message.message;

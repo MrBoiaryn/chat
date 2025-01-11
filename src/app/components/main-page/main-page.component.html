@@ -1,6 +1,6 @@
 <div class="container">
   <section class="left-side">
-    <app-header [refreshContacts]="refreshContacts.bind(this)"></app-header>
+    <app-header></app-header>
     <app-chats (personSelected)="onPersonSelected($event)" [contacts]="contacts" [isEditing]="isEditing"></app-chats>
   </section>
 
@@ -9,7 +9,7 @@
       <app-chat [contact]="selectedPerson" [name]="selectedPerson.name || ''" [surname]="selectedPerson.surname || ''"
         [imgUrl]="selectedPerson.imgUrl || ''" [messages]="selectedPerson.messages || []"
         (contactDeleted)="onPersonDeleted($event)" (editingStateChanged)="onEditingStateChanged($event)"
-        (contactUpdated)="onContactUpdated($event)" (messagesUpdated)="onMessagesUpdated($event)">
+        (messagesUpdated)="onMessagesUpdated($event)">
       </app-chat>
     </ng-container>
     <ng-template #noChatSelected>

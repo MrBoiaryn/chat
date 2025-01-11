@@ -6,7 +6,6 @@ import {
   MatDialogModule,
   MatDialogRef,
 } from '@angular/material/dialog';
-// import { HttpService } from '../../shared/services/http.service';
 import { CommonModule } from '@angular/common';
 import { Contact } from '../../shared/types/contact.interface';
 import {
@@ -21,7 +20,7 @@ import { DatabaseReference, getDatabase, ref } from 'firebase/database';
   templateUrl: './newContactDialog.component.html',
   styleUrl: './newContactDialog.component.scss',
   providers: [
-    MessageRepository, // Provide MessageRepository
+    MessageRepository,
     {
       provide: DATABASE_REFERENCE,
       useFactory: (): DatabaseReference => {
@@ -39,7 +38,6 @@ export class NewContactDialogComponent implements OnInit {
   @Input() updateContacts!: () => void;
 
   constructor(
-    // private httpService: HttpService,
     private messageRepository: MessageRepository,
     private dialogRef: MatDialogRef<NewContactDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { refreshContacts: () => void }
