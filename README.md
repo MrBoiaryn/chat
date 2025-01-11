@@ -1,5 +1,9 @@
-mango db
-username: mrboiaryn
-pass: tKSbvqqcbu9YWBSZ
+### start local-server
 
-mongodb+srv://mrboiaryn:<db_password>@cluster0.bhf9m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+```bash
+ng s
+```
+
+### start host-server
+
+[url](https://chat-boiaryn.web.app/)
