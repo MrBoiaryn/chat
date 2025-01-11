@@ -6,11 +6,10 @@
 
   <section class="right-side">
     <ng-container *ngIf="selectedPerson; else noChatSelected">
-      <app-chat [contactKey]="selectedPerson.key || ''" [name]="selectedPerson.name || ''"
-        [surname]="selectedPerson.surname || ''" [imgUrl]="selectedPerson.imgUrl || ''"
-        [messages]="selectedPerson.messages || []" (contactDeleted)="onPersonDeleted($event)"
-        (editingStateChanged)="onEditingStateChanged($event)" (contactUpdated)="onContactUpdated($event)"
-        (lastMessageUpdated)="onLastMessageUpdated($event)">
+      <app-chat [contact]="selectedPerson" [name]="selectedPerson.name || ''" [surname]="selectedPerson.surname || ''"
+        [imgUrl]="selectedPerson.imgUrl || ''" [messages]="selectedPerson.messages || []"
+        (contactDeleted)="onPersonDeleted($event)" (editingStateChanged)="onEditingStateChanged($event)"
+        (contactUpdated)="onContactUpdated($event)" (messagesUpdated)="onMessagesUpdated($event)">
       </app-chat>
     </ng-container>
     <ng-template #noChatSelected>

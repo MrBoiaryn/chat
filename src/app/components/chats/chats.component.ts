@@ -9,9 +9,10 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpService } from '../../shared/services/http.service';
+// import { HttpService } from '../../shared/services/http.service';
 import { MaxlengthPipe } from '../../shared/pipes/maxlength.pipe';
-import { ContactInterface } from '../../shared/types/contact.interface';
+import { Contact } from '../../shared/types/contact.interface';
+import { MessageRepository } from '../../shared/classes/messageRepository';
 
 @Component({
   selector: 'app-chats',
@@ -19,95 +20,88 @@ import { ContactInterface } from '../../shared/types/contact.interface';
   templateUrl: './chats.component.html',
   styleUrl: './chats.component.scss',
 })
-export class ChatsComponent implements OnInit, OnChanges, DoCheck {
-  @Input() contacts: ContactInterface[] = [];
+export class ChatsComponent implements OnInit {
+  @Input() contacts: Contact[] = [];
+  // @Input() contacts: Set<Contact> = new Set();
   @Input() isEditing: boolean = false;
 
-  @Output() personSelected = new EventEmitter<ContactInterface>();
-  selectedContact: ContactInterface | null = null;
+  @Output() personSelected = new EventEmitter<Contact>();
+  selectedContact: Contact | null = null;
 
   private previousContacts: string = '';
 
-  constructor(private httpService: HttpService) {}
+  constructor(private messageRepository: MessageRepository) {}
 
   ngOnInit(): void {
-    console.log('[ngOnInit] - ChatsComponent ініціалізовано');
+    // console.log('[ngOnInit] - ChatsComponent ініціалізовано');
     this.loadContacts();
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    console.log('[ngOnChanges] - Зміни в @Input:', changes);
-    if (changes['contacts'] && !changes['contacts'].firstChange) {
-      this.sortContacts();
-    }
-  }
+  // ngOnChanges(changes: SimpleChanges): void {
+  //   // console.log('[ngOnChanges] - Зміни в @Input:', changes);
+  //   if (changes['contacts'] && !changes['contacts'].firstChange) {
+  //     this.sortContacts();
+  //   }
+  // }
 
-  ngDoCheck(): void {
-    const currentContacts = JSON.stringify(this.contacts);
-    if (currentContacts !== this.previousContacts) {
-      console.log('[ngDoCheck] - Контакти змінилися');
+  // ngDoCheck(): void {
+  //   const currentContacts = JSON.stringify(this.contacts);
+  //   if (currentContacts !== this.previousContacts) {
+  //     // console.log('[ngDoCheck] - Контакти змінилися');
 
-      this.previousContacts = currentContacts;
-      this.sortContacts();
-    }
-  }
-
-  refreshContacts(): void {
-    console.log('[refreshContacts] - Оновлення контактів');
-
-    this.loadContacts();
-    this.sortContacts();
-  }
+  //     this.previousContacts = currentContacts;
+  //     this.sortContacts();
+  //   }
+  // }
 
   loadContacts(): void {
-    console.log('[loadContacts] - Завантаження контактів з сервера...');
-
-    this.httpService.getContacts().subscribe({
-      next: (contacts) => {
-        console.log('[loadContacts] - Контакти завантажені:', contacts);
-
-        this.contacts = contacts;
+    this.messageRepository.contactUpdated$.subscribe((contact) => {
+      console.log(contact);
+      if (contact) {
+        const index = this.contacts.findIndex((c) => c.key === contact.key);
+        if (index !== -1) {
+          this.contacts[index] = contact;
+        } else {
+          this.contacts.push(contact);
+        }
         this.sortContacts();
-      },
-      error: (err) => {
-        console.error('Error loading contacts:', err);
-      },
+      }
     });
   }
 
-  selectPerson(contact: ContactInterface): void {
+  selectPerson(contact: Contact): void {
     if (this.selectedContact === contact) return;
     if (this.isEditing) {
       alert('You cannot switch chats while editing.');
       return;
     }
-    console.log('[selectPerson] - Обраний контакт:', contact);
+    // console.log('[selectPerson] - Обраний контакт:', contact);
 
     this.selectedContact = contact;
-    this.sortContacts();
+    // this.sortContacts();
     this.personSelected.emit(contact);
   }
 
-  onContactDeleted(contactKey: string): void {
-    this.contacts = this.contacts.filter(
-      (contact) => contact.key !== contactKey
-    );
-    this.sortContacts();
+  onContactDeleted(contact: Contact): void {
+    this.contacts = this.contacts.filter((contact) => {
+      return contact.key !== contact.key;
+    });
+    // this.sortContacts();
   }
 
-  deleteContact(contactKey: string): void {
-    this.httpService.deleteContact(contactKey).subscribe({
-      next: () => {
-        this.loadContacts();
-      },
-      error: (err) => {
-        console.error('Error deleting contact:', err);
-      },
-    });
-  }
+  // deleteContact(contactKey: string): void {
+  //   this.httpService.deleteContact(contactKey).subscribe({
+  //     next: () => {
+  //       this.loadContacts();
+  //     },
+  //     error: (err) => {
+  //       console.error('Error deleting contact:', err);
+  //     },
+  //   });
+  // }
 
   private sortContacts(): void {
-    console.log('[sortContacts] - Сортування контактів');
+    // console.log('[sortContacts] - Сортування контактів');
 
     this.contacts.sort((a, b) => {
       const dateA = new Date(a.time || '').getTime();
@@ -116,17 +110,17 @@ export class ChatsComponent implements OnInit, OnChanges, DoCheck {
     });
   }
 
-  onContactUpdated(updatedContact: ContactInterface): void {
-    const index = this.contacts.findIndex(
-      (contact) => contact.key === updatedContact.key
-    );
-    if (index !== -1) {
-      this.contacts[index] = updatedContact;
-      // Створюємо новий масив, щоб Angular відстежив зміни
-      this.contacts = [...this.contacts];
-      this.sortContacts();
-    }
-  }
+  // onContactUpdated(updatedContact: Contact): void {
+  //   const index = this.contacts.findIndex(
+  //     (contact) => contact.key === updatedContact.key
+  //   );
+  //   if (index !== -1) {
+  //     this.contacts[index] = updatedContact;
+  //     // Створюємо новий масив, щоб Angular відстежив зміни
+  //     this.contacts = [...this.contacts];
+  //     this.sortContacts();
+  //   }
+  // }
 
   // trackByContact(index: number, contact: ContactInterface): string {
   //   return contact.key ?? index.toString();

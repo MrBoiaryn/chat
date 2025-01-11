@@ -22,6 +22,8 @@
     "@angular/router": "^19.0.0",
     "@fortawesome/angular-fontawesome": "^1.0.0",
     "angular-fontawesome": "^1.0.0",
+    "environment": "^1.1.0",
+    "firebase": "^11.1.0",
     "mongodb": "^6.12.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",

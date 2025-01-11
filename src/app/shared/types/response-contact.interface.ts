@@ -1,5 +1,5 @@
-import { ContactInterface } from './contact.interface';
+import { Contact } from './contact.interface';
 
 export interface ResponseContactInterface {
-  [key: string]: ContactInterface;
+  [key: string]: Contact;
 }

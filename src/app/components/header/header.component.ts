@@ -1,13 +1,15 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MatIconModule } from '@angular/material/icon';
-import { HttpService } from '../../shared/services/http.service';
+// import { HttpService } from '../../shared/services/http.service';
 import { DialogModule } from '@angular/cdk/dialog';
 import { NewContactDialogComponent } from '../newContactDialog/newContactDialog.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
 import { SearchComponent } from '../search/search.component';
 import { CommonModule } from '@angular/common';
+import { AndriiBoiyarin } from '../../shared/data/datainfo';
+import { MessageRepository } from '../../shared/classes/messageRepository';
 
 @Component({
   selector: 'app-header',
@@ -40,11 +42,15 @@ export class HeaderComponent {
   @Output() chatSelected = new EventEmitter<string>();
   @Output() searchEvent = new EventEmitter<string>();
 
-  constructor(private httpService: HttpService, private dialog: MatDialog) {}
+  constructor(
+    // private httpService: HttpService,
+    private messageRepository: MessageRepository,
+    private dialog: MatDialog
+  ) {}
 
   ngOnInit(): void {
     this.loadMyData();
-    this.loadAllMessages();
+    // this.loadAllMessages();
   }
 
   openDialog(): void {
@@ -65,30 +71,16 @@ export class HeaderComponent {
   }
 
   private loadMyData() {
-    this.httpService.getMyData().subscribe((data) => {
-      this.myName = data.name;
-      this.myImgUrl = data.imgUrl;
-      this.mySurname = data.surname || '';
-    });
+    this.myName = AndriiBoiyarin.name;
+    this.myImgUrl = AndriiBoiyarin.imgUrl;
+    this.mySurname = AndriiBoiyarin.surname;
   }
 
-  private loadAllMessages() {
-    this.httpService.getContacts().subscribe((allPersons) => {
-      this.allMessages = allPersons.flatMap((person) => {
-        if (!Array.isArray(person.messages)) {
-          return [];
-        }
-        return person.messages.map((msg) => ({
-          name: person.name,
-          surname: person.surname,
-          message: msg.message,
-          time: msg.time,
-        }));
-      });
-    });
-  }
+  // searchMessages(): void {
+  //   this.messageRepository.searchMessages(this.searchTerm);
+  // }
 
-  onSearch(): void {
-    this.searchEvent.emit(this.searchTerm);
-  }
+  // onSearch(): void {
+  //   this.searchEvent.emit(this.searchTerm);
+  // }
 }

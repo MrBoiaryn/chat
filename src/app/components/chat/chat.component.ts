@@ -13,12 +13,16 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { HttpService } from '../../shared/services/http.service';
+// import { HttpService } from '../../shared/services/http.service';
 import { FormsModule } from '@angular/forms';
 import { NotificationComponent } from '../notification/notification.component';
 import { MessageInterface } from '../../shared/types/message.interface';
-import { ContactInterface } from '../../shared/types/contact.interface';
+import { Contact } from '../../shared/types/contact.interface';
+import { MessageRepository } from '../../shared/classes/messageRepository';
+import { ChatBot } from '../../shared/classes/chatBot';
+import { BotService } from '../../shared/services/botService';
 
+const me = 'Andrii Boiyarin';
 @Component({
   selector: 'app-chat',
   imports: [
@@ -30,22 +34,27 @@ import { ContactInterface } from '../../shared/types/contact.interface';
   ],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss',
+  providers: [
+    ChatBot, // Provide ChatBot
+    BotService, // Provide BotService
+    // MessageRepository,
+  ],
 })
-export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
-  @Input() contactKey: string | undefined;
+export class ChatComponent implements AfterViewInit, OnInit {
+  @Input() contact: Contact | null = null;
   @Input() name: string | undefined;
   @Input() surname: string | undefined;
   @Input() imgUrl: string | undefined;
   @Input() messages: MessageInterface[] = [];
 
-  @Output() contactDeleted = new EventEmitter<string>();
+  @Output() contactDeleted = new EventEmitter<Contact>();
   @Output() editingStateChanged = new EventEmitter<boolean>();
-  @Output() contactUpdated = new EventEmitter<ContactInterface>();
-  @Output() lastMessageUpdated = new EventEmitter<{
+  @Output() contactUpdated = new EventEmitter<Contact>();
+  @Output() messagesUpdated = new EventEmitter<{
     contactKey: string;
-    lastMessage: string;
-    time: string;
+    messages: MessageInterface[];
   }>();
+
   @Output() notificationEvent = new EventEmitter<string>();
   @Output() newNotification = new EventEmitter<{ message: string }>();
 
@@ -55,96 +64,69 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
   isEditing: boolean = false;
   editedName: string = '';
   editedSurname: string = '';
-  notifications: { name: string; surname: string; message: string }[] = [];
+  notifications: { name: string; message: string }[] = [];
 
   newMessageContent: string = '';
   isEditingMessage: boolean = false;
   editingMessageKey: string | null = null;
   editingMessage: MessageInterface | null = null;
+  lastMessage: MessageInterface | null = null;
 
-  constructor(private httpService: HttpService) {}
+  constructor(
+    private messageRepository: MessageRepository,
+    private chatBot: ChatBot
+  ) {}
 
   ngOnInit(): void {
-    console.log('[ngOnInit] - ChatComponent ініціалізовано');
+    // console.log('[ngOnInit] - ChatComponent ініціалізовано');
 
+    this.subscribe();
+
+    // console.log(this.messages);
     this.loadMessages();
   }
 
   ngAfterViewInit(): void {
-    console.log('[ngAfterViewInit] - DOM повністю завантажено');
+    // console.log('[ngAfterViewInit] - DOM повністю завантажено');
 
     this.scrollToBottom();
     this.focusMessageInput();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.log('[ngOnChanges] - Зміни в @Input:', changes);
+    // console.log('[ngOnChanges] - Зміни в @Input:', changes);
 
     if (changes['messages']) {
       this.scrollToBottom();
     }
-    if (changes['contactKey'] && this.contactKey) {
+    if (changes['contact'] && this.contact) {
       this.loadMessages();
     }
   }
 
   sendMessage(): void {
-    if (!this.newMessageContent.trim() || !this.contactKey) return;
+    if (!this.newMessageContent.trim() || !this.contact) return;
 
-    if (
-      this.isEditingMessage &&
-      this.editingMessage &&
-      this.editingMessageKey
-    ) {
+    if (this.editingMessage) {
       const updatedMessage: MessageInterface = {
         ...this.editingMessage,
         message: this.newMessageContent.trim(),
         time: new Date().toISOString(),
       };
 
-      this.httpService
-        .updateMessage(
-          this.contactKey!,
-          this.editingMessageKey!,
-          updatedMessage
-        )
-        .subscribe({
-          next: () => {
-            const index = this.messages.findIndex(
-              (msg) => msg.key === this.editingMessageKey
-            );
-            if (index !== -1) {
-              this.messages[index] = updatedMessage;
-            }
-
-            this.newMessageContent = '';
-            this.isEditingMessage = false;
-            this.editingMessage = null;
-            this.editingMessageKey = null;
-            this.scrollToBottom();
-          },
-          error: (err) => console.error('Error updating message:', err),
-        });
+      this.messageRepository.editMessage(
+        this.contact.key!,
+        this.editingMessageKey!,
+        updatedMessage
+      );
     } else {
-      const newMessage: MessageInterface = {
-        message: this.newMessageContent.trim(),
-        time: new Date().toISOString(),
-        sender: 'User',
-      };
-
-      this.httpService
-        .addMessageToContact(this.contactKey!, newMessage)
-        .subscribe({
-          next: (response: { name: string }) => {
-            newMessage.key = response.name;
-            this.messages.push(newMessage);
-            this.newMessageContent = '';
-            this.scrollToBottom();
-            this.updateLastMessageOnServer(newMessage);
-            setTimeout(() => this.getBotResponse(), 3000);
-          },
-          error: (err) => console.error('Error adding message:', err),
-        });
+      this.messageRepository.sendMessage(
+        this.contact.key!,
+        this.newMessageContent.trim()
+      );
+      this.newMessageContent = '';
+      this.focusMessageInput();
+      this.chatBot.generateMessage(this.contact.key!);
     }
   }
 
@@ -156,25 +138,19 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
   }
 
   deletePerson(): void {
-    if (!this.contactKey) return;
+    if (!this.contact) return;
 
     const confirmation = window.confirm(
       `Are you sure you want to delete this contact: ${this.name} ${this.surname}?`
     );
 
     if (confirmation) {
-      this.httpService.deleteContact(this.contactKey).subscribe({
-        next: () => {
-          this.contactDeleted.emit(this.contactKey);
-        },
-        error: (err) => {
-          console.error('Error deleting contact:', err);
-        },
-      });
+      this.contactDeleted.emit(this.contact);
+      this.messageRepository.deleteContact(this.contact.key!);
     }
   }
 
-  selectPerson(contact: ContactInterface): void {
+  selectPerson(contact: Contact): void {
     if (this.isEditing) {
       alert('You cannot switch chats while editing.');
       return;
@@ -183,12 +159,12 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
   }
 
   saveChanges(): void {
-    console.log('[saveChanges] - Збереження змін');
+    // console.log('[saveChanges] - Збереження змін');
 
-    if (!this.contactKey) return;
+    if (!this.contact) return;
 
-    const updatedContact: ContactInterface = {
-      key: this.contactKey,
+    const updatedContact: Contact = {
+      key: this.contact.key,
       name: this.editedName,
       surname: this.editedSurname,
       imgUrl: this.imgUrl || '',
@@ -197,21 +173,16 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
           ? this.messages[this.messages.length - 1].message
           : '',
       time: new Date().toISOString(),
+      messages: this.messages,
     };
-
-    this.httpService.updateContact(this.contactKey, updatedContact).subscribe({
-      next: () => {
-        this.name = this.editedName;
-        this.surname = this.editedSurname;
-        this.isEditing = false;
-        this.contactUpdated.emit(updatedContact);
-        // this.contactUpdated.emit({ ...updatedContact });
-        this.editingStateChanged.emit(false);
-      },
-      error: (err) => {
-        console.error('Error saving changes:', err);
-      },
-    });
+    this.name = this.editedName;
+    this.surname = this.editedSurname;
+    this.isEditing = false;
+    this.contactUpdated.emit(updatedContact);
+    // this.contactUpdated.emit({ ...updatedContact });
+    this.editingStateChanged.emit(false);
+    this.messageRepository.updateContact(this.contact.key!, updatedContact);
+    this.focusMessageInput();
   }
 
   cancelChanges(): void {
@@ -238,77 +209,45 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
     }, 0);
   }
 
-  private getBotResponse(): void {
-    if (!this.contactKey) return;
+  private subscribe(): void {
+    this.messageRepository.contactUpdated$.subscribe((contact) => {
+      if (
+        this.messages.length > 0 &&
+        contact?.messages &&
+        contact?.messages.length > this.messages.length
+      ) {
+        for (let i = this.messages.length; i < contact.messages.length; i++) {
+          if (contact.messages[i].sender != 'Bot') continue;
 
-    this.httpService
-      .getBotResponse(this.contactKey, this.name || 'Bot', this.surname || '')
-      .subscribe((botMessage) => {
-        this.httpService
-          .addMessageToContact(this.contactKey!, botMessage)
-          .subscribe({
-            next: (response) => {
-              botMessage.key = response.name;
-              this.messages.push(botMessage);
+          this.addNotification(
+            contact.name + ' ' + contact.surname,
+            contact.messages[i].message
+          );
+        }
+      }
 
-              this.updateLastMessageOnServer(botMessage);
-              this.addNotification(
-                this.name || '',
-                this.surname || '',
-                botMessage.message
-              );
-              this.scrollToBottom();
-            },
-            error: (err) => console.error('Error adding bot response:', err),
-          });
-      });
-  }
-
-  private updateLastMessageOnServer(lastMessage: MessageInterface): void {
-    const updatedContact: Partial<ContactInterface> = {
-      lastMessage: lastMessage.message,
-      time: lastMessage.time,
-    };
-
-    this.httpService.updateContact(this.contactKey!, updatedContact).subscribe({
-      next: () => {
-        this.lastMessageUpdated.emit({
-          contactKey: this.contactKey!,
-          lastMessage: lastMessage.message,
-          time: lastMessage.time,
-        });
-      },
-      error: (err) => console.error('Error updating last message:', err),
-    });
-  }
-
-  private loadMessages(): void {
-    console.log(
-      '[loadMessages] - Завантаження повідомлень для контакту:',
-      this.contactKey
-    );
-
-    this.httpService.getMessages(this.contactKey!).subscribe((messages) => {
-      this.messages = messages || [];
+      this.messages = contact?.messages.slice() || [];
       this.scrollToBottom();
 
+      console.log(this.messages);
+
       if (this.messages.length > 0) {
-        const lastMessage = this.messages[this.messages.length - 1];
-        this.lastMessageUpdated.emit({
-          contactKey: this.contactKey!,
-          lastMessage: lastMessage.message,
-          time: lastMessage.time,
+        this.messagesUpdated.emit({
+          contactKey: this.contact?.key!,
+          messages: this.messages,
         });
       }
     });
   }
 
-  private addNotification(
-    name: string,
-    surname: string,
-    message: string
-  ): void {
-    const notification = { name, surname, message };
+  loadMessages(): void {
+    this.messages =
+      this.messageRepository.getContact(this.contact?.key!)?.messages || [];
+    this.focusMessageInput();
+  }
+
+  private addNotification(name: string, message: string): void {
+    const notification = { name, message };
     this.notifications.push(notification);
 
     setTimeout(() => this.closeNotification(notification), 10000);
@@ -319,6 +258,7 @@ export class ChatComponent implements AfterViewInit, OnChanges, OnInit {
   }
 
   editMessage(message: MessageInterface): void {
+    console.log('work');
     if (!message.key) return;
 
     this.newMessageContent = message.message;

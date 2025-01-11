@@ -6,15 +6,30 @@ import {
   MatDialogModule,
   MatDialogRef,
 } from '@angular/material/dialog';
-import { HttpService } from '../../shared/services/http.service';
+// import { HttpService } from '../../shared/services/http.service';
 import { CommonModule } from '@angular/common';
-import { ContactInterface } from '../../shared/types/contact.interface';
+import { Contact } from '../../shared/types/contact.interface';
+import {
+  DATABASE_REFERENCE,
+  MessageRepository,
+} from '../../shared/classes/messageRepository';
+import { DatabaseReference, getDatabase, ref } from 'firebase/database';
 
 @Component({
   selector: 'app-new-contact-dialog',
   imports: [FormsModule, DialogModule, MatDialogModule, CommonModule],
   templateUrl: './newContactDialog.component.html',
   styleUrl: './newContactDialog.component.scss',
+  providers: [
+    MessageRepository, // Provide MessageRepository
+    {
+      provide: DATABASE_REFERENCE,
+      useFactory: (): DatabaseReference => {
+        const db = getDatabase();
+        return ref(db, 'contacts');
+      },
+    },
+  ],
 })
 export class NewContactDialogComponent implements OnInit {
   name = '';
@@ -24,7 +39,8 @@ export class NewContactDialogComponent implements OnInit {
   @Input() updateContacts!: () => void;
 
   constructor(
-    private httpService: HttpService,
+    // private httpService: HttpService,
+    private messageRepository: MessageRepository,
     private dialogRef: MatDialogRef<NewContactDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { refreshContacts: () => void }
   ) {}
@@ -36,7 +52,8 @@ export class NewContactDialogComponent implements OnInit {
       return;
     }
 
-    const newPerson: ContactInterface = {
+    const newPerson: Contact = {
+      key: null,
       name: this.name,
       surname: this.surname,
       imgUrl: `../../../assets/images/icon/${this.generateRandomAvatarNumber(
@@ -47,15 +64,8 @@ export class NewContactDialogComponent implements OnInit {
       messages: [],
     };
 
-    this.httpService.createContact(newPerson).subscribe({
-      next: () => {
-        this.data.refreshContacts();
-        this.dialogRef.close();
-      },
-      error: (err) => {
-        console.error('Error creating contact:', err);
-      },
-    });
+    this.messageRepository.addContact(newPerson);
+    this.dialogRef.close();
   }
 
   private generateRandomAvatarNumber(gender: string): number {

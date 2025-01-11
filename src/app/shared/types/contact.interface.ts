@@ -1,11 +1,13 @@
 import { MessageInterface } from './message.interface';
 
-export interface ContactInterface {
-  key?: string | null;
-  name: string;
-  surname: string;
-  imgUrl: string;
-  lastMessage: string;
-  time: string;
-  messages?: Array<MessageInterface>;
+export class Contact {
+  constructor(
+    public key: string | null,
+    public name: string,
+    public surname: string,
+    public imgUrl: string,
+    public lastMessage: string,
+    public time: string,
+    public messages: Array<MessageInterface>
+  ) {}
 }
